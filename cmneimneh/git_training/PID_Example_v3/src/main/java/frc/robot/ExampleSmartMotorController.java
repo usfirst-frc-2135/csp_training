@@ -3,9 +3,12 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot;
+<<<<<<< HEAD
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+=======
+>>>>>>> origin/cmneimneh
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 /**
@@ -16,6 +19,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 public class ExampleSmartMotorController {
 
   private final WPI_TalonSRX m_motor = new WPI_TalonSRX(5);
+<<<<<<< HEAD
   private double m_kp;
   private double m_ki;
   private double m_kd;
@@ -29,6 +33,11 @@ public class ExampleSmartMotorController {
   private double countsToRotations(double encoderCounts) {
     return encoderCounts / kEncoderCPR;
   }
+=======
+  private double m_kp; 
+  private double m_ki; 
+  private double m_kd; 
+>>>>>>> origin/cmneimneh
 
   public enum PIDMode {
     kPosition,
@@ -42,6 +51,7 @@ public class ExampleSmartMotorController {
    * @param port The port for the controller.
    */
   @SuppressWarnings("PMD.UnusedFormalParameter")
+<<<<<<< HEAD
   public ExampleSmartMotorController(int port) {
     m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
     m_motor.selectProfileSlot(0, 0);
@@ -50,6 +60,9 @@ public class ExampleSmartMotorController {
     m_motor.config_kI(0, m_ki);
     m_motor.config_kD(0, m_kd);
   }
+=======
+  public ExampleSmartMotorController(int port) {}
+>>>>>>> origin/cmneimneh
 
   /**
    * Example method for setting the PID gains of the smart controller.
@@ -59,9 +72,15 @@ public class ExampleSmartMotorController {
    * @param kd The derivative gain.
    */
   public void setPID(double kp, double ki, double kd) {
+<<<<<<< HEAD
     m_kp = kp;
     m_ki = ki;
     m_kd = kd;
+=======
+    m_kp = kp; 
+    m_ki = ki; 
+    m_kd = kd; 
+>>>>>>> origin/cmneimneh
   }
 
   /**
@@ -71,6 +90,7 @@ public class ExampleSmartMotorController {
    * @param setpoint The controller setpoint.
    * @param arbFeedforward An arbitrary feedforward output (from -1 to 1).
    */
+<<<<<<< HEAD
   public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward) {
     ControlMode controlMode;
 
@@ -92,6 +112,9 @@ public class ExampleSmartMotorController {
 
     m_motor.set(controlMode, rotationsToCounts(setpoint));
   }
+=======
+  public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward) {}
+>>>>>>> origin/cmneimneh
 
   /**
    * Places this motor controller in follower mode.
@@ -106,7 +129,11 @@ public class ExampleSmartMotorController {
    * @return The current encoder distance.
    */
   public double getEncoderDistance() {
+<<<<<<< HEAD
     return countsToRotations(m_motor.getSelectedSensorPosition(0));
+=======
+    return 0;
+>>>>>>> origin/cmneimneh
   }
 
   /**
@@ -115,11 +142,16 @@ public class ExampleSmartMotorController {
    * @return The current encoder rate.
    */
   public double getEncoderRate() {
+<<<<<<< HEAD
     return countsToRotations(m_motor.getSelectedSensorVelocity(0) * 10);
+=======
+    return 0;
+>>>>>>> origin/cmneimneh
   }
 
   /** Resets the encoder to zero distance. */
   public void resetEncoder() {
+<<<<<<< HEAD
     m_motor.setSelectedSensorPosition(0, 0, 0);
   }
 
@@ -145,5 +177,26 @@ public class ExampleSmartMotorController {
 
   public void stopMotor() {
     set(0.0);
+=======
+    m_motor.setSelectedSensorPosition(0);
+  }
+
+  public void set(double speed) {}
+
+  public double get() {
+    return 0;
+  }
+
+  public void setInverted(boolean isInverted) {}
+
+  public boolean getInverted() {
+    return false;
+  }
+
+  public void disable() {}
+
+  public void stopMotor() {
+    m_motor.set(ControlMode.PercentOutput, 0);
+>>>>>>> origin/cmneimneh
   }
 }
