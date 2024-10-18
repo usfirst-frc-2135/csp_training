@@ -34,11 +34,8 @@ public class Robot extends TimedRobot {
         if (controller.getRawButton(2)) {
             // m_goal = new TrapezoidProfile.State(4096, 0);
             // button2Pressed = true;
-            m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition,
-                4096, 0); // Start moving to goal 
-        } 
-
-        if (controller.getRawButton(3)) {
+            m_motor.updateMotorSpeed();// Start moving to goal 
+        } else if (controller.getRawButton(3)) {
             m_goal = new TrapezoidProfile.State(0, 0);
             // button3Pressed = true;
             m_motor.stopMotor(); // Stop the motor
