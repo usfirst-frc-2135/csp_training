@@ -28,7 +28,7 @@ public class ExampleSmartMotorController {
     kVelocity,
     kMovementWitchcraft,
   }
-  private static final double kEncoderCPR = 360;
+  private static final double kEncoderCPR = 4096;
   private WPI_TalonSRX m_motor;
   private double setpoint;
   private PIDMode mode;

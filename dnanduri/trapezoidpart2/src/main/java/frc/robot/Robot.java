@@ -12,13 +12,14 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Robot extends TimedRobot { //Handles the periodic execution of code (such as auton)
+
+  private final static double kDt = 0.020;
+
   private final static double kv = 8.0; // Max velocity - RPS
   private final static double ka = 16.0; // Max acceleration - RPS^2
-  private final static double goal_1 = 2;
+  private final static double goal_1 = 1.758;
   private final static double goal_2 = 0.0;
   private final static TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(kv, ka);
-
-  private static double kDt = 0.02;
 
   private final XboxController controller = new XboxController(0);
   private final ExampleSmartMotorController a_extraMotor = new ExampleSmartMotorController(5);
