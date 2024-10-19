@@ -3,12 +3,9 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot;
-<<<<<<< HEAD
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-=======
->>>>>>> origin/cmneimneh
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 /**
@@ -19,31 +16,34 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 public class ExampleSmartMotorController {
 
   private final WPI_TalonSRX m_motor = new WPI_TalonSRX(5);
-<<<<<<< HEAD
-  private double m_kp;
-  private double m_ki;
-  private double m_kd;
+  private double kp;
+  private double ki;
+  private double kd;
 
-  private static final double kEncoderCPR = 4096;
+  private final static double kEncoderCPR = 4096;
+  /**
+   * COUNTS TO ROTATIONS
+   * encoder reads values in counts, but human users input rotations for simplicity
+   * 4096 counts in one rotation, following methods converts counts to rotations, vice versa
+   */
 
-  private double rotationsToCounts(double rotation) {
+  private double rotationsToCounts(double rotation) { 
     return rotation * kEncoderCPR;
   }
 
   private double countsToRotations(double encoderCounts) {
     return encoderCounts / kEncoderCPR;
   }
-=======
-  private double m_kp; 
-  private double m_ki; 
-  private double m_kd; 
->>>>>>> origin/cmneimneh
 
+  /**
+   * declares PIDMode as an enum
+   * PIDMode used to determine controlmode
+   */
   public enum PIDMode {
     kPosition,
     kVelocity,
     kMovementWitchcraft
-  }
+}
 
   /**
    * Creates a new ExampleSmartMotorController.
@@ -51,18 +51,15 @@ public class ExampleSmartMotorController {
    * @param port The port for the controller.
    */
   @SuppressWarnings("PMD.UnusedFormalParameter")
-<<<<<<< HEAD
   public ExampleSmartMotorController(int port) {
-    m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
+    m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder); 
+    //encoder type in TalonSRX is quadrature encoder
     m_motor.selectProfileSlot(0, 0);
 
-    m_motor.config_kP(0, m_kp);
-    m_motor.config_kI(0, m_ki);
-    m_motor.config_kD(0, m_kd);
+    m_motor.config_kP(0, kp);
+    m_motor.config_kI(0, ki);
+    m_motor.config_kD(0, kd);
   }
-=======
-  public ExampleSmartMotorController(int port) {}
->>>>>>> origin/cmneimneh
 
   /**
    * Example method for setting the PID gains of the smart controller.
@@ -72,15 +69,9 @@ public class ExampleSmartMotorController {
    * @param kd The derivative gain.
    */
   public void setPID(double kp, double ki, double kd) {
-<<<<<<< HEAD
-    m_kp = kp;
-    m_ki = ki;
-    m_kd = kd;
-=======
-    m_kp = kp; 
-    m_ki = ki; 
-    m_kd = kd; 
->>>>>>> origin/cmneimneh
+    this.kp = kp;
+    this.ki = ki;
+    this.kd = kd;
   }
 
   /**
@@ -90,7 +81,6 @@ public class ExampleSmartMotorController {
    * @param setpoint The controller setpoint.
    * @param arbFeedforward An arbitrary feedforward output (from -1 to 1).
    */
-<<<<<<< HEAD
   public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward) {
     ControlMode controlMode;
 
@@ -112,9 +102,6 @@ public class ExampleSmartMotorController {
 
     m_motor.set(controlMode, rotationsToCounts(setpoint));
   }
-=======
-  public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward) {}
->>>>>>> origin/cmneimneh
 
   /**
    * Places this motor controller in follower mode.
@@ -129,11 +116,7 @@ public class ExampleSmartMotorController {
    * @return The current encoder distance.
    */
   public double getEncoderDistance() {
-<<<<<<< HEAD
     return countsToRotations(m_motor.getSelectedSensorPosition(0));
-=======
-    return 0;
->>>>>>> origin/cmneimneh
   }
 
   /**
@@ -142,20 +125,18 @@ public class ExampleSmartMotorController {
    * @return The current encoder rate.
    */
   public double getEncoderRate() {
-<<<<<<< HEAD
     return countsToRotations(m_motor.getSelectedSensorVelocity(0) * 10);
-=======
-    return 0;
->>>>>>> origin/cmneimneh
   }
 
   /** Resets the encoder to zero distance. */
   public void resetEncoder() {
-<<<<<<< HEAD
     m_motor.setSelectedSensorPosition(0, 0, 0);
   }
 
-  public void set(double voltage) {
+  /**
+   * used to set the constant speed of the motor, in percentOutput
+   */
+  public void set(double voltage) { // set the speed of the motor using percent output
     m_motor.set(ControlMode.PercentOutput, voltage);
   }
 
@@ -163,6 +144,7 @@ public class ExampleSmartMotorController {
     return m_motor.getMotorOutputPercent();
   }
 
+  /** Inverts motor direction */
   public void setInverted(boolean isInverted) {
     m_motor.setInverted(isInverted);
   }
@@ -177,26 +159,5 @@ public class ExampleSmartMotorController {
 
   public void stopMotor() {
     set(0.0);
-=======
-    m_motor.setSelectedSensorPosition(0);
-  }
-
-  public void set(double speed) {}
-
-  public double get() {
-    return 0;
-  }
-
-  public void setInverted(boolean isInverted) {}
-
-  public boolean getInverted() {
-    return false;
-  }
-
-  public void disable() {}
-
-  public void stopMotor() {
-    m_motor.set(ControlMode.PercentOutput, 0);
->>>>>>> origin/cmneimneh
   }
 }
