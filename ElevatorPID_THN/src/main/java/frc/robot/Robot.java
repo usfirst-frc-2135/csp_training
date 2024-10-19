@@ -8,6 +8,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.TimedRobot;
 
 public class Robot extends TimedRobot {
@@ -15,11 +16,9 @@ public class Robot extends TimedRobot {
 
   private final XboxController m_controller = new XboxController(0);
   private final ExampleSmartMotorController m_motor = new ExampleSmartMotorController(1);
-  // Note: These gains are fake, and will have to be tuned for your robot.
+
   private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(1, 1.5);
 
-  // Create a motion profile with the given maximum velocity and maximum
-  // acceleration constraints for the next setpoint.
   private final TrapezoidProfile m_profile =
       new TrapezoidProfile(new TrapezoidProfile.Constraints(1.75, 0.75));
   private TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
@@ -29,6 +28,7 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     // Note: These gains are fake, and will have to be tuned for your robot.
     m_motor.setPID(0.5, 0.0, 0.0);
+    DataLogManager.start();
   }
 
   @Override
@@ -53,12 +53,33 @@ public class Robot extends TimedRobot {
 
     SmartDashboard.putNumber("Elevator Rotations", m_motor.getEncoderDistance());
 
-    while (m_controller.getAButtonPressed()) {
+    if (m_controller.getAButtonPressed()) { // if A button pressed, set PID at voltage of 0.3
       m_motor.set(0.3);
+      DataLogManager.log("A Button Pressed -- Voltage PercentOutput: 0.3");
+    }
+    /*
+     * Why use .set() instead of .setSetpoint()?
+     */
+
+    if (m_controller.getBButtonPressed()) { // if B button pressed, set PID at voltage of -0.3
+      m_motor.set(-0.3);
+      DataLogManager.log("B Button Pressed -- Voltage PercentOutput: -0.3");
     }
 
-    while (m_controller.getBButtonPressed()) {
-      m_motor.set(-0.3);
+    if (m_controller.getRightBumperPressed()) { // if Right Bumper pressed, stop Motor
+      m_motor.stopMotor();
+      DataLogManager.log("Right Bumper Pressed -- Motor Stopped");
+    }
+
+    if (m_controller.getRawButtonPressed(8)) { // if menu button, invert motor direction
+      DataLogManager.log("Menu Button Pressed"); // controller is not reading the button being pressed?
+      if (m_motor.getInverted()) {
+        m_motor.setInverted(false);
+        DataLogManager.log("Motor Inverted -- False");
+      } else {
+        m_motor.setInverted(true);
+        DataLogManager.log("Motor Inverted -- True");
+      }
     }
   }
 }

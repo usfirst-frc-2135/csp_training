@@ -20,7 +20,7 @@ public class ExampleSmartMotorController {
   private double m_ki;
   private double m_kd;
 
-  private static final double kEncoderCPR = 4096;
+  private final static double kEncoderCPR = 4096;
 
   private double rotationsToCounts(double rotation) {
     return rotation * kEncoderCPR;
