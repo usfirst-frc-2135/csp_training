@@ -21,8 +21,13 @@ public class ExampleSmartMotorController {
   private double m_kd;
 
   private final static double kEncoderCPR = 4096;
+  /**
+   * COUNTS TO ROTATIONS
+   * encoder reads values in counts, but human users input rotations for simplicity
+   * 4096 counts in one rotation, following methods converts counts to rotations, vice versa
+   */
 
-  private double rotationsToCounts(double rotation) {
+  private double rotationsToCounts(double rotation) { 
     return rotation * kEncoderCPR;
   }
 
@@ -30,6 +35,10 @@ public class ExampleSmartMotorController {
     return encoderCounts / kEncoderCPR;
   }
 
+  /**
+   * declares PIDMode as an enum
+   * PIDMode used to determine controlmode
+   */
   public enum PIDMode {
     kPosition,
     kVelocity,
@@ -43,7 +52,8 @@ public class ExampleSmartMotorController {
    */
   @SuppressWarnings("PMD.UnusedFormalParameter")
   public ExampleSmartMotorController(int port) {
-    m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
+    m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder); 
+    //encoder type in TalonSRX is quadrature encoder
     m_motor.selectProfileSlot(0, 0);
 
     m_motor.config_kP(0, m_kp);
@@ -123,7 +133,10 @@ public class ExampleSmartMotorController {
     m_motor.setSelectedSensorPosition(0, 0, 0);
   }
 
-  public void set(double voltage) {
+  /**
+   * used to set the constant speed of the motor, in percentOutput
+   */
+  public void set(double voltage) { // set the speed of the motor using percent output
     m_motor.set(ControlMode.PercentOutput, voltage);
   }
 
@@ -131,6 +144,7 @@ public class ExampleSmartMotorController {
     return m_motor.getMotorOutputPercent();
   }
 
+  /** Inverts motor direction */
   public void setInverted(boolean isInverted) {
     m_motor.setInverted(isInverted);
   }

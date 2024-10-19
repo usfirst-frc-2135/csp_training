@@ -57,9 +57,6 @@ public class Robot extends TimedRobot {
       m_motor.set(0.3);
       DataLogManager.log("A Button Pressed -- Voltage PercentOutput: 0.3");
     }
-    /*
-     * Why use .set() instead of .setSetpoint()?
-     */
 
     if (m_controller.getBButtonPressed()) { // if B button pressed, set PID at voltage of -0.3
       m_motor.set(-0.3);
