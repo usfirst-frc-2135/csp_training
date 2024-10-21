@@ -49,7 +49,7 @@ public class ExampleSmartMotorController {
             // Calculate output
             double output = (kp * error);
             m_motor.set(ControlMode.PercentOutput, output);
-            // Stop PID if within certain margic of error
+            // Stop PID if within certain margin of error
             if (error < 0.005) {
                 stopMotor();
                 PIDOn = false;
