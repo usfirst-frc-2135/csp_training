@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 
 public class Robot extends TimedRobot {
   private static double kDt = 0.02;
+  private double goal;
 
   private final XboxController m_controller = new XboxController(0);
   private final ExampleSmartMotorController m_motor = new ExampleSmartMotorController(1);
@@ -27,7 +28,7 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     // Note: These gains are fake, and will have to be tuned for your robot.
-    m_motor.setPID(0.5, 0.0, 0.0);
+    m_motor.setPID(0.125, 0.0, 0.0);
     DataLogManager.start();
   }
 
@@ -52,15 +53,30 @@ public class Robot extends TimedRobot {
     */
 
     SmartDashboard.putNumber("Elevator Rotations", m_motor.getEncoderDistance());
+    // SmartDashboard.putNumber("Encoder Position", m_motor.getEncoderDistance());
+    SmartDashboard.putNumber("Target", goal);
+    SmartDashboard.putNumber("Error", m_motor.getClosedLoopError());
 
-    if (m_controller.getAButtonPressed()) { // if A button pressed, set PID at voltage of 0.3
+    if (m_controller.getAButtonPressed()) { // if A button pressed, set voltage of 0.3
       m_motor.set(0.3);
       DataLogManager.log("A Button Pressed -- Voltage PercentOutput: 0.3");
     }
 
-    if (m_controller.getBButtonPressed()) { // if B button pressed, set PID at voltage of -0.3
+    if (m_controller.getBButtonPressed()) { // if B button pressed, set voltage of -0.3
       m_motor.set(-0.3);
       DataLogManager.log("B Button Pressed -- Voltage PercentOutput: -0.3");
+    }
+
+    if (m_controller.getXButtonPressed()) { // if X button pressed, set PID at setpoint of 1.0
+      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 1.0, 0);
+      DataLogManager.log("X Button Pressed -- PID Setpoint: 1.0");
+      goal = 4096.0;
+    }
+
+    if (m_controller.getYButtonPressed()) { // if Y button pressed, set PID at setpoint of 0.0
+      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 0.0, 0);
+      DataLogManager.log("Y Button Pressed -- PID Setpoint: 0.0");
+      goal = 0.0;
     }
 
     if (m_controller.getRightBumperPressed()) { // if Right Bumper pressed, stop Motor

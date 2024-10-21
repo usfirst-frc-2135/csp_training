@@ -16,9 +16,9 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 public class ExampleSmartMotorController {
 
   private final WPI_TalonSRX m_motor = new WPI_TalonSRX(5);
-  private double m_kp;
-  private double m_ki;
-  private double m_kd;
+  private double kp;
+  private double ki;
+  private double kd;
 
   private final static double kEncoderCPR = 4096;
   /**
@@ -56,9 +56,9 @@ public class ExampleSmartMotorController {
     //encoder type in TalonSRX is quadrature encoder
     m_motor.selectProfileSlot(0, 0);
 
-    m_motor.config_kP(0, m_kp);
-    m_motor.config_kI(0, m_ki);
-    m_motor.config_kD(0, m_kd);
+    m_motor.config_kP(0, kp);
+    m_motor.config_kI(0, ki);
+    m_motor.config_kD(0, kd);
   }
 
   /**
@@ -69,9 +69,9 @@ public class ExampleSmartMotorController {
    * @param kd The derivative gain.
    */
   public void setPID(double kp, double ki, double kd) {
-    m_kp = kp;
-	  m_ki = ki;
-	  m_kd = kd;
+    this.kp = kp;
+	  this.ki = ki;
+	  this.kd = kd;
   }
 
   /**
@@ -150,7 +150,11 @@ public class ExampleSmartMotorController {
   }
 
   public boolean getInverted() {
-    return m_motor.getInverted( );
+    return m_motor.getInverted();
+  }
+
+  public double getClosedLoopError() {
+    return countsToRotations(m_motor.getClosedLoopError());
   }
 
   public void disable() {
