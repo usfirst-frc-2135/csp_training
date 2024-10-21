@@ -153,6 +153,10 @@ public class ExampleSmartMotorController {
     return m_motor.getInverted( );
   }
 
+  public double getClosedLoopError() {
+    return countsToRotations(m_motor.getClosedLoopError());
+  }
+
   public void disable() {
     m_motor.set(ControlMode.Disabled, 0);
   }
