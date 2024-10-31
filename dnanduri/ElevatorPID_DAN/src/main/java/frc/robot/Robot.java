@@ -6,14 +6,21 @@ package frc.robot;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.Joystick;
+
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Robot extends TimedRobot {
-  private static double kDt = 0.02;
+  private final static double kDt = 0.020;
 
-  private final Joystick m_joystick = new Joystick(1);
-  private final ExampleSmartMotorController m_motor = new ExampleSmartMotorController(1);
+  private final static double kv = 8.0; // Max velocity - RPS
+  private final static double ka = 16.0;
+  private final static TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(kv, ka);
+
+
+  private final XboxController controller = new XboxController(0);
+  private final ExampleSmartMotorController m_motor = new ExampleSmartMotorController(5);
   // Note: These gains are fake, and will have to be tuned for your robot.
   private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(1, 1.5);
 
@@ -21,20 +28,24 @@ public class Robot extends TimedRobot {
   // acceleration constraints for the next setpoint.
   private final TrapezoidProfile m_profile =
       new TrapezoidProfile(new TrapezoidProfile.Constraints(1.75, 0.75));
+
+  private final TrapezoidProfile.Constraints m_Constraints =
+      new TrapezoidProfile.Constraints(kv, ka);
+
   private TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
   private TrapezoidProfile.State m_setpoint = new TrapezoidProfile.State();
 
   @Override
   public void robotInit() {
     // Note: These gains are fake, and will have to be tuned for your robot.
-    m_motor.setPID(1.3, 0.0, 0.7);
+    m_motor.setPID(0.5, 0.0, 0.0);
   }
 
   @Override
   public void teleopPeriodic() {
-    if (m_joystick.getRawButtonPressed(2)) {
+    if (controller.getAButtonPressed()) {
       m_goal = new TrapezoidProfile.State(5, 0);
-    } else if (m_joystick.getRawButtonPressed(3)) {
+    } else if (controller.getBButtonPressed()) {
       m_goal = new TrapezoidProfile.State();
     }
 

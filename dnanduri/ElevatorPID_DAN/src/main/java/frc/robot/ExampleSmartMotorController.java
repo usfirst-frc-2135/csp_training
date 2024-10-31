@@ -4,9 +4,9 @@
 
 package frc.robot;
 
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 /**
  * A simplified stub class that simulates the API of a common "smart" motor controller.
@@ -14,11 +14,20 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
  * <p>Has no actual functionality.
  */
 public class ExampleSmartMotorController {
+  WPI_TalonSRX m_motor = new WPI_TalonSRX(5);
+  private double kp;
+  private double ki;
+  private double kd;
+
   public enum PIDMode {
     kPosition,
     kVelocity,
     kMovementWitchcraft
   }
+  private static final double kEncoderCPR = 4096;
+  private double setpoint;
+  private PIDMode mode;
+
 
   /**
    * Creates a new ExampleSmartMotorController.
@@ -26,7 +35,14 @@ public class ExampleSmartMotorController {
    * @param port The port for the controller.
    */
   @SuppressWarnings("PMD.UnusedFormalParameter")
-  public ExampleSmartMotorController(int port) {}
+  public ExampleSmartMotorController(int port) {
+
+    m_motor = new WPI_TalonSRX(port);
+    m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
+    m_motor.config_kP(0, kp);
+    m_motor.config_kI(0, ki);
+    m_motor.config_kD(0, kd);
+  }
 
   /**
    * Example method for setting the PID gains of the smart controller.
@@ -35,7 +51,19 @@ public class ExampleSmartMotorController {
    * @param ki The integral gain.
    * @param kd The derivative gain.
    */
-  public void setPID(double kp, double ki, double kd) {}
+  public void setPID(double kp, double ki, double kd) {
+    this.kp = kp;
+    this.ki = ki;
+    this.kd = kd;
+  }
+
+  private double rotationsToCounts(double rotation) {
+    return rotation * kEncoderCPR;
+  }
+
+  private double countsToRotation(double counts) {
+    return counts / kEncoderCPR;
+  }
 
   /**
    * Example method for setting the setpoint of the smart controller in PID mode.
@@ -44,7 +72,26 @@ public class ExampleSmartMotorController {
    * @param setpoint The controller setpoint.
    * @param arbFeedforward An arbitrary feedforward output (from -1 to 1).
    */
-  public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward) {}
+  public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward) {
+    ControlMode controlMode;
+
+    switch (mode) {
+    default:
+    case kPosition:
+      controlMode = ControlMode.Position;
+      break;
+
+    case kVelocity :
+      controlMode = ControlMode.Velocity;
+      setpoint /= 10;
+      break;
+
+    case kMovementWitchcraft :
+      controlMode = ControlMode.MotionMagic;
+      break;
+    }
+    m_motor.set(controlMode, rotationsToCounts(setpoint));
+  }
 
   /**
    * Places this motor controller in follower mode.
@@ -59,7 +106,7 @@ public class ExampleSmartMotorController {
    * @return The current encoder distance.
    */
   public double getEncoderDistance() {
-    return 0;
+    return countsToRotation(m_motor.getSelectedSensorPosition(0));
   }
 
   /**
@@ -68,25 +115,34 @@ public class ExampleSmartMotorController {
    * @return The current encoder rate.
    */
   public double getEncoderRate() {
-    return 0;
+    return countsToRotation(m_motor.getSelectedSensorVelocity(0) * 10);
   }
 
   /** Resets the encoder to zero distance. */
-  public void resetEncoder() {}
+  public void resetEncoder() 
+  {
+    m_motor.setSelectedSensorPosition(0, 0, 0);
+  }
 
-  public void set(double speed) {}
+  public void set(double voltage) {}
 
   public double get() {
-    return 0;
+    return m_motor.getMotorOutputPercent();
   }
 
-  public void setInverted(boolean isInverted) {}
+  public void setInverted(boolean isInverted) {
+    m_motor.setInverted(isInverted);
+  }
 
   public boolean getInverted() {
-    return false;
+    return m_motor.getInverted();
   }
 
-  public void disable() {}
+  public void disable() {
+    m_motor.set(ControlMode.Disabled, 0);
+  }
 
-  public void stopMotor() {}
+  public void stopMotor() {
+    set(0.0);
+  }
 }
