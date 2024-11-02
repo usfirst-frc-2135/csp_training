@@ -8,6 +8,8 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
+import edu.wpi.first.wpilibj.DataLogManager;
+
 /**
  * A simplified stub class that simulates the API of a common "smart" motor controller.
  *
@@ -70,8 +72,12 @@ public class ExampleSmartMotorController {
    */
   public void setPID(double kp, double ki, double kd) {
     this.kp = kp;
-	  this.ki = ki;
-	  this.kd = kd;
+    this.ki = ki;
+    this.kd = kd;
+  }
+
+  public double getKp() {
+    return kp; 
   }
 
   /**
@@ -101,7 +107,9 @@ public class ExampleSmartMotorController {
     }
 
     m_motor.set(controlMode, rotationsToCounts(setpoint));
-  }
+    DataLogManager.log("ControlMode: " + controlMode);
+    DataLogManager.log("Setpoint: " + rotationsToCounts(setpoint));
+}
 
   /**
    * Places this motor controller in follower mode.
@@ -154,7 +162,7 @@ public class ExampleSmartMotorController {
   }
 
   public double getClosedLoopError() {
-    return countsToRotations(m_motor.getClosedLoopError());
+    return (m_motor.getClosedLoopError());
   }
 
   public void disable() {

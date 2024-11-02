@@ -6,17 +6,17 @@ package frc.robot;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Robot extends TimedRobot {
   private static double kDt = 0.02;
-  private double goal;
+  private double goal; 
 
   private final XboxController m_controller = new XboxController(0);
-  private final ExampleSmartMotorController m_motor = new ExampleSmartMotorController(1);
+  private final ExampleSmartMotorController m_motor = new ExampleSmartMotorController(5);
 
   private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(1, 1.5);
 
@@ -28,7 +28,8 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     // Note: These gains are fake, and will have to be tuned for your robot.
-    m_motor.setPID(0.125, 0.0, 0.0);
+    m_motor.setPID(2, 0.0, 0.0);
+    m_motor.resetEncoder();
     DataLogManager.start();
   }
 
@@ -52,10 +53,16 @@ public class Robot extends TimedRobot {
         m_feedforward.calculate(m_setpoint.velocity) / 12.0);
     */
 
+    // SmartDashboard.putNumber("Elevator Rotations", m_motor.getEncoderDistance());
+
+    // SmartDashboard.putNumber("Target", goal);
+    // SmartDashboard.putNumber("Error", m_motor.getClosedLoopError());
+
+
     SmartDashboard.putNumber("Elevator Rotations", m_motor.getEncoderDistance());
-    // SmartDashboard.putNumber("Encoder Position", m_motor.getEncoderDistance());
     SmartDashboard.putNumber("Target", goal);
     SmartDashboard.putNumber("Error", m_motor.getClosedLoopError());
+    SmartDashboard.putNumber("Kp", m_motor.getKp());
 
     if (m_controller.getAButtonPressed()) { // if A button pressed, set voltage of 0.3
       m_motor.set(0.3);
@@ -68,7 +75,7 @@ public class Robot extends TimedRobot {
     }
 
     if (m_controller.getXButtonPressed()) { // if X button pressed, set PID at setpoint of 1.0
-      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 1.0, 0);
+      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 0.3, 0);
       DataLogManager.log("X Button Pressed -- PID Setpoint: 1.0");
       goal = 4096.0;
     }
