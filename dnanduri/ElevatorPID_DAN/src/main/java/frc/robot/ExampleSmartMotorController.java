@@ -14,17 +14,22 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
  * <p>Has no actual functionality.
  */
 public class ExampleSmartMotorController {
-  WPI_TalonSRX m_motor = new WPI_TalonSRX(5);
+  WPI_TalonSRX m_motor;
   private double kp;
   private double ki;
   private double kd;
 
+  //enum is short for enumeration, which means the action of mentioning a number of things one by one
+  //Often represents specific categories or states, which is why the variables kPosition, kVelocity, and kMovementWitchcraft were placed here
+  //They prevent errors from arbitrary strings or integers
+  //enhances code readability, which makes it easier to read
+  //Can be used in switch statements
   public enum PIDMode {
     kPosition,
     kVelocity,
-    kMovementWitchcraft
+    kMovementWitchcraft,
   }
-  private static final double kEncoderCPR = 4096;
+  private final static double kEncoderCPR = 4096;
   private double setpoint;
   private PIDMode mode;
 
@@ -35,14 +40,26 @@ public class ExampleSmartMotorController {
    * @param port The port for the controller.
    */
   @SuppressWarnings("PMD.UnusedFormalParameter")
-  public ExampleSmartMotorController(int port) {
-
+  //The constructor initialises the motor with the given PID settings
+  //It ensures the motor is ready to operate with these configurations
+  //The unused port parameter may be intended for future use
+  public ExampleSmartMotorController(int port) { //This is the constructor; it specifies the CAN bus port that the motor controller is connected to
+    
     m_motor = new WPI_TalonSRX(port);
     m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
     m_motor.config_kP(0, kp);
     m_motor.config_kI(0, ki);
     m_motor.config_kD(0, kd);
   }
+
+    private static double rotationsToCounts(double rotation) {
+    return rotation * kEncoderCPR;
+  }
+
+  private static double countsToRotation(double counts) {
+    return counts / kEncoderCPR;
+  }
+
 
   /**
    * Example method for setting the PID gains of the smart controller.
@@ -57,13 +74,6 @@ public class ExampleSmartMotorController {
     this.kd = kd;
   }
 
-  private double rotationsToCounts(double rotation) {
-    return rotation * kEncoderCPR;
-  }
-
-  private double countsToRotation(double counts) {
-    return counts / kEncoderCPR;
-  }
 
   /**
    * Example method for setting the setpoint of the smart controller in PID mode.
@@ -106,14 +116,14 @@ public class ExampleSmartMotorController {
    * @return The current encoder distance.
    */
   public double getEncoderDistance() {
-    return countsToRotation(m_motor.getSelectedSensorPosition(0));
+    return countsToRotation(m_motor.getSelectedSensorPosition());
   }
 
   /**
    * Returns the encoder rate.
    *
    * @return The current encoder rate.
-   */
+   */ 
   public double getEncoderRate() {
     return countsToRotation(m_motor.getSelectedSensorVelocity(0) * 10);
   }

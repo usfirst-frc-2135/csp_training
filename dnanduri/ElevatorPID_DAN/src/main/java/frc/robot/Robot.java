@@ -10,17 +10,18 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.DataLogManager;
 
 public class Robot extends TimedRobot {
   private final static double kDt = 0.020;
 
   private final static double kv = 8.0; // Max velocity - RPS
   private final static double ka = 16.0;
-  private final static TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(kv, ka);
-
+  //private final static TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(kv, ka);
 
   private final XboxController controller = new XboxController(0);
   private final ExampleSmartMotorController m_motor = new ExampleSmartMotorController(5);
+
   // Note: These gains are fake, and will have to be tuned for your robot.
   private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(1, 1.5);
 
@@ -39,19 +40,42 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     // Note: These gains are fake, and will have to be tuned for your robot.
     m_motor.setPID(0.5, 0.0, 0.0);
+    DataLogManager.start();
+
+    DataLogManager.log("Initial encoder position: " + m_motor.getEncoderDistance());
   }
 
   @Override
   public void teleopPeriodic() {
+
+    SmartDashboard.putNumber("elevator rotations", m_motor.getEncoderDistance());
     if (controller.getAButtonPressed()) {
-      m_goal = new TrapezoidProfile.State(5, 0);
+      m_motor.set(0.3);
+      DataLogManager.log("A button pressed");
     } else if (controller.getBButtonPressed()) {
-      m_goal = new TrapezoidProfile.State();
+      m_motor.set(-0.03);
+      DataLogManager.log("B button pressed");
     }
+    if (controller.getRawButtonPressed(8)) {
+      m_motor.setInverted(false);
+    } else {
+      m_motor.setInverted(true);
+
+    }
+
+    if (controller.getRightBumperPressed()) {
+      m_motor.stopMotor();
+      DataLogManager.log("Right bumper pressed, motor stopped");
+    }
+
+    
+
+    //var profile = new TrapezoidProfile(m_Constraints, m_goal, m_setpoint);
+    var profile = new TrapezoidProfile(m_Constraints, m_goal, m_setpoint);
 
     // Retrieve the profiled setpoint for the next timestep. This setpoint moves
     // toward the goal while obeying the constraints.
-    m_setpoint = m_profile.calculate(kDt, m_setpoint, m_goal);
+    m_setpoint = m_profile.calculate(kDt);
 
     // Send setpoint to offboard controller PID
     m_motor.setSetpoint(
