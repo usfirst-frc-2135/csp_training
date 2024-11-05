@@ -18,9 +18,9 @@ import edu.wpi.first.wpilibj.DataLogManager;
 public class ExampleSmartMotorController {
 
   private final WPI_TalonSRX m_motor = new WPI_TalonSRX(5);
-  private double kp;
-  private double ki;
-  private double kd;
+  private double m_kp;
+  private double m_ki;
+  private double m_kd;
 
   private final static double kEncoderCPR = 4096;
   /**
@@ -58,9 +58,7 @@ public class ExampleSmartMotorController {
     //encoder type in TalonSRX is quadrature encoder
     m_motor.selectProfileSlot(0, 0);
 
-    m_motor.config_kP(0, kp);
-    m_motor.config_kI(0, ki);
-    m_motor.config_kD(0, kd);
+    setPID(m_kp, m_ki, m_kd);
   }
 
   /**
@@ -71,13 +69,16 @@ public class ExampleSmartMotorController {
    * @param kd The derivative gain.
    */
   public void setPID(double kp, double ki, double kd) {
-    this.kp = kp;
-    this.ki = ki;
-    this.kd = kd;
+    m_kp = kp;
+    m_ki = ki;
+    m_kd = kd;
+    m_motor.config_kP(0, kp);
+    m_motor.config_kI(0, ki);
+    m_motor.config_kD(0, kd);
   }
 
   public double getKp() {
-    return kp; 
+    return m_kp; 
   }
 
   /**
@@ -167,6 +168,10 @@ public class ExampleSmartMotorController {
 
   public void disable() {
     m_motor.set(ControlMode.Disabled, 0);
+  }
+
+  public double getVelocity() {
+    return m_motor.getSelectedSensorVelocity();
   }
 
   public void stopMotor() {
