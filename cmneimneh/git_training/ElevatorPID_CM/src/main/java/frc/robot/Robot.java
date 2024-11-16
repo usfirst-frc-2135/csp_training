@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
+
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -12,22 +14,27 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Robot extends TimedRobot {
- private static double kDt = 0.02;
+ public static double kDt = 0.02;
  private double goal;
+ private final static double kEncoderCPR = 4096;
 
  private final XboxController m_controller = new XboxController(0);
- private final ExampleSmartMotorController m_motor = new ExampleSmartMotorController(5);
+ private final ExampleSmartMotorController m_motor = new ExampleSmartMotorController(5, kEncoderCPR);
  private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(1, 1.5);
  private final TrapezoidProfile m_profile =
      new TrapezoidProfile(new TrapezoidProfile.Constraints(1.0, 2.0));
  private TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
  private TrapezoidProfile.State m_setpoint = new TrapezoidProfile.State();
 
+ private final TalonSRXSimCollection m_motorSim = m_motor.getMotorSimulation( );
+ private final ElevSim m_elevSim = new ElevSim(m_motorSim, kEncoderCPR);
+
  @Override
  public void robotInit() {
    // Note: These gains are fake, and will have to be tuned for your robot.
    m_motor.setPID(0.27, 0.0, 0.0);
    m_motor.resetEncoder();
+   m_elevSim.periodic( );
    DataLogManager.start();
  }
 
@@ -60,7 +67,9 @@ public class Robot extends TimedRobot {
    SmartDashboard.putNumber("Error", m_motor.getClosedLoopError());
    SmartDashboard.putNumber("Kp", m_motor.getKp());
    SmartDashboard.putNumber("Velocity", m_motor.getVelocity());
-   
+  
+   m_elevSim.periodic( );
+  
    if (m_controller.getAButtonPressed()) { // if A button pressed, set voltage of 0.3
      m_motor.set(0.3);
      DataLogManager.log("A Button Pressed -- Voltage PercentOutput: 0.3");
