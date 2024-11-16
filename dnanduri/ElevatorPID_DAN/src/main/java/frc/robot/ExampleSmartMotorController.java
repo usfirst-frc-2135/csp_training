@@ -70,9 +70,9 @@ public class ExampleSmartMotorController {
    * @param kd The derivative gain.
    */
   public void setPID(double kp, double ki, double kd) {
-    this.m_kp = kp;
-    this.m_ki = ki;
-    this.m_kd = kd;
+    m_kp = kp;
+    m_ki = ki;
+    m_kd = kd;
 
     m_motor.config_kP(0, m_kp);
     m_motor.config_kI(0, m_ki);
@@ -150,6 +150,10 @@ public class ExampleSmartMotorController {
 
   public double get() {
     return m_motor.getMotorOutputPercent();
+  }
+
+  public double getClosedLoopError() {
+    return (m_motor.getClosedLoopError());
   }
 
   public void setInverted(boolean isInverted) {

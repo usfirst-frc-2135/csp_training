@@ -17,6 +17,7 @@ public class Robot extends TimedRobot {
 
   private final static double kv = 8.0; // Max velocity - RPS
   private final static double ka = 16.0;
+  private double goal;
   //private final static TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(kv, ka);
 
   private final XboxController controller = new XboxController(0);
@@ -39,14 +40,19 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     // Note: These gains are fake, and will have to be tuned for your robot.
-    m_motor.setPID(0.5, 0.0, 0.0);
+    m_motor.setPID(0.125, 0.0, 0.0);
     DataLogManager.start();
 
     DataLogManager.log("Initial encoder position: " + m_motor.getEncoderDistance());
+    
   }
 
   @Override
   public void teleopPeriodic() {
+
+    SmartDashboard.putNumber("Goal", goal);
+    SmartDashboard.putNumber("Kp", m_motor.getKp());
+    SmartDashboard.putNumber("Error", m_motor.getClosedLoopError());
 
     SmartDashboard.putNumber("elevator rotations", m_motor.getEncoderDistance());
     if (controller.getAButtonPressed()) {
@@ -69,16 +75,20 @@ public class Robot extends TimedRobot {
 
     if (controller.getXButtonPressed()) {
       m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 1.0, 0.0);
+      goal = 4096.0;
     }
 
     if (controller.getYButtonPressed()) {
       m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 0.0, 0.0);
+      goal = 0.0;
     }
 
     if (controller.getRightBumperPressed()) {
       m_motor.stopMotor();
       DataLogManager.log("Right bumper pressed, motor stopped");
     }
+
+    
 
     
 
