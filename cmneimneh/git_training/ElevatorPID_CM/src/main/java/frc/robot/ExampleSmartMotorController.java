@@ -6,8 +6,8 @@ package frc.robot;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-
 import edu.wpi.first.wpilibj.DataLogManager;
 
 /**
@@ -15,14 +15,16 @@ import edu.wpi.first.wpilibj.DataLogManager;
  *
  * <p>Has no actual functionality.
  */
+
 public class ExampleSmartMotorController {
-
   private final WPI_TalonSRX m_motor = new WPI_TalonSRX(5);
-  private double kp;
-  private double ki;
-  private double kd;
-
-  private final static double kEncoderCPR = 4096;
+  private double m_kp;
+  private double m_ki;
+  private double m_kd;
+  private static double m_kEncoderCPR; 
+  
+  private TalonSRXSimCollection m_motorSim;  
+  
   /**
    * COUNTS TO ROTATIONS
    * encoder reads values in counts, but human users input rotations for simplicity
@@ -30,11 +32,11 @@ public class ExampleSmartMotorController {
    */
 
   private double rotationsToCounts(double rotation) { 
-    return rotation * kEncoderCPR;
+    return rotation * m_kEncoderCPR;
   }
 
   private double countsToRotations(double encoderCounts) {
-    return encoderCounts / kEncoderCPR;
+    return encoderCounts / m_kEncoderCPR;
   }
 
   /**
@@ -53,14 +55,13 @@ public class ExampleSmartMotorController {
    * @param port The port for the controller.
    */
   @SuppressWarnings("PMD.UnusedFormalParameter")
-  public ExampleSmartMotorController(int port) {
+  public ExampleSmartMotorController(int port, double kEncoderCPR) {
+    m_kEncoderCPR = kEncoderCPR; 
     m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder); 
     //encoder type in TalonSRX is quadrature encoder
     m_motor.selectProfileSlot(0, 0);
 
-    m_motor.config_kP(0, kp);
-    m_motor.config_kI(0, ki);
-    m_motor.config_kD(0, kd);
+    setPID(m_kp, m_ki, m_kd);
   }
 
   /**
@@ -71,13 +72,16 @@ public class ExampleSmartMotorController {
    * @param kd The derivative gain.
    */
   public void setPID(double kp, double ki, double kd) {
-    this.kp = kp;
-    this.ki = ki;
-    this.kd = kd;
+    m_kp = kp;
+    m_ki = ki;
+    m_kd = kd;
+    m_motor.config_kP(0, kp);
+    m_motor.config_kI(0, ki);
+    m_motor.config_kD(0, kd);
   }
 
   public double getKp() {
-    return kp; 
+    return m_kp; 
   }
 
   /**
@@ -169,6 +173,14 @@ public class ExampleSmartMotorController {
     m_motor.set(ControlMode.Disabled, 0);
   }
 
+  public double getVelocity() {
+    return m_motor.getSelectedSensorVelocity();
+  }
+  public TalonSRXSimCollection getMotorSimulation( )
+  {
+    return m_motorSim;
+  }
+ 
   public void stopMotor() {
     set(0.0);
   }
