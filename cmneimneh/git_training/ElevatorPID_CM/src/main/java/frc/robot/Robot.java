@@ -35,7 +35,6 @@ public class Robot extends TimedRobot
     // Note: These gains are fake, and will have to be tuned for your robot.
     m_motor.setPID(0.27, 0.0, 0.0);
     m_motor.resetEncoder( );
-    m_elevSim.periodic( );
     DataLogManager.start( );
   }
 
@@ -84,26 +83,40 @@ public class Robot extends TimedRobot
       DataLogManager.log("B Button Pressed -- Voltage PercentOutput: -0.3");
     }
 
-    m_setpoint = m_profile.calculate(kDt, m_setpoint, m_goal);
-    m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, m_setpoint.position,
-        m_feedforward.calculate(m_setpoint.velocity) / 12.0); // why divide by 12?
-
     if (m_controller.getXButtonPressed( ))
     { // if X button pressed, set PID at setpoint of 1.0
-      // m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 1.0, 0); 
-      // DataLogManager.log("X Button Pressed -- PID Setpoint: 1.0");
-      // goal = 4096.0;
+     // m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 1.0, 0); 
+     // DataLogManager.log("X Button Pressed -- PID Setpoint: 1.0");
+     // goal = 4096.0;
       m_goal = new TrapezoidProfile.State(5, 0); // test this value (position value :)
       DataLogManager.log("X Button Pressed -- Trapezoid Profile Setpoint: 1.0");
     }
 
     if (m_controller.getYButtonPressed( ))
     { // if Y button pressed, set PID at setpoint of 0.0
-      // m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 0.0, 0);
-      // DataLogManager.log("Y Button Pressed -- PID Setpoint: 0.0");
-      // goal = 0.0;
+     // m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 0.0, 0);
+     // DataLogManager.log("Y Button Pressed -- PID Setpoint: 0.0");
+     // goal = 0.0;
       m_goal = new TrapezoidProfile.State(0, 0); // test this value (position value :)
       DataLogManager.log("Y Button Pressed -- Trapezoid Profile Setpoint: 0.0");
+    }
+
+    // TODO: 
+    //        We want this block to run ONLY when given a goal above (when X or Y is pressed), but we want it to
+    //        run for both cases. Arbitrary feedforward will be 0.0 for you (we can talk about when to use
+    //        it in person). Do the following:
+    //
+    //        1) Make a flag (boolean) that is set in the X and Y button cases above to start a movement
+    //        2) Use the flag to enable this code block with the "if" (replace the "true")
+    //        3) In the block below, when the movement is finished, be sure to clear that flag
+    //
+    //        Put useful info to the dashboard to debug (logging is good for state changes, not spamming messages
+    //        to the console).
+    //
+    if (true)
+    {
+      m_setpoint = m_profile.calculate(kDt, m_setpoint, m_goal);
+      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, m_setpoint.position, 0.0); // why divide by 12?
     }
 
     if (m_controller.getRightBumperPressed( ))
