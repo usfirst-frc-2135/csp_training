@@ -23,7 +23,7 @@ public class ExampleSmartMotorController {
   private double m_kd;
   private static double m_kEncoderCPR; 
   
-  private TalonSRXSimCollection m_motorSim;  
+  private TalonSRXSimCollection m_motorSim = new TalonSRXSimCollection(m_motor);
   
   /**
    * COUNTS TO ROTATIONS

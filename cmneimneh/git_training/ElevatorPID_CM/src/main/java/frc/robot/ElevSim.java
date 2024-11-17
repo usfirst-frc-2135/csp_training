@@ -8,7 +8,6 @@ package frc.robot;
 
 import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
 
-
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
