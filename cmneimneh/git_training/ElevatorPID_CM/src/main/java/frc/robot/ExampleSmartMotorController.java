@@ -13,29 +13,33 @@ import edu.wpi.first.wpilibj.DataLogManager;
 /**
  * A simplified stub class that simulates the API of a common "smart" motor controller.
  *
- * <p>Has no actual functionality.
+ * <p>
+ * Has no actual functionality.
  */
 
-public class ExampleSmartMotorController {
-  private final WPI_TalonSRX m_motor = new WPI_TalonSRX(5);
-  private double m_kp;
-  private double m_ki;
-  private double m_kd;
-  private static double m_kEncoderCPR; 
-  
+public class ExampleSmartMotorController
+{
+  private final WPI_TalonSRX    m_motor    = new WPI_TalonSRX(5);
+  private double                m_kp;
+  private double                m_ki;
+  private double                m_kd;
+  private static double         m_kEncoderCPR;
+
   private TalonSRXSimCollection m_motorSim = new TalonSRXSimCollection(m_motor);
-  
+
   /**
    * COUNTS TO ROTATIONS
    * encoder reads values in counts, but human users input rotations for simplicity
    * 4096 counts in one rotation, following methods converts counts to rotations, vice versa
    */
 
-  private double rotationsToCounts(double rotation) { 
+  private double rotationsToCounts(double rotation)
+  {
     return rotation * m_kEncoderCPR;
   }
 
-  private double countsToRotations(double encoderCounts) {
+  private double countsToRotations(double encoderCounts)
+  {
     return encoderCounts / m_kEncoderCPR;
   }
 
@@ -43,21 +47,22 @@ public class ExampleSmartMotorController {
    * declares PIDMode as an enum
    * PIDMode used to determine controlmode
    */
-  public enum PIDMode {
-    kPosition,
-    kVelocity,
-    kMovementWitchcraft
+  public enum PIDMode
+  {
+    kPosition, kVelocity, kMovementWitchcraft
   }
 
   /**
    * Creates a new ExampleSmartMotorController.
    *
-   * @param port The port for the controller.
+   * @param port
+   *          The port for the controller.
    */
   @SuppressWarnings("PMD.UnusedFormalParameter")
-  public ExampleSmartMotorController(int port, double kEncoderCPR) {
-    m_kEncoderCPR = kEncoderCPR; 
-    m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder); 
+  public ExampleSmartMotorController(int port, double kEncoderCPR)
+  {
+    m_kEncoderCPR = kEncoderCPR;
+    m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
     //encoder type in TalonSRX is quadrature encoder
     m_motor.selectProfileSlot(0, 0);
 
@@ -67,11 +72,15 @@ public class ExampleSmartMotorController {
   /**
    * Example method for setting the PID gains of the smart controller.
    *
-   * @param kp The proportional gain.
-   * @param ki The integral gain.
-   * @param kd The derivative gain.
+   * @param kp
+   *          The proportional gain.
+   * @param ki
+   *          The integral gain.
+   * @param kd
+   *          The derivative gain.
    */
-  public void setPID(double kp, double ki, double kd) {
+  public void setPID(double kp, double ki, double kd)
+  {
     m_kp = kp;
     m_ki = ki;
     m_kd = kd;
@@ -80,21 +89,27 @@ public class ExampleSmartMotorController {
     m_motor.config_kD(0, kd);
   }
 
-  public double getKp() {
-    return m_kp; 
+  public double getKp( )
+  {
+    return m_kp;
   }
 
   /**
    * Example method for setting the setpoint of the smart controller in PID mode.
    *
-   * @param mode The mode of the PID controller.
-   * @param setpoint The controller setpoint.
-   * @param arbFeedforward An arbitrary feedforward output (from -1 to 1).
+   * @param mode
+   *          The mode of the PID controller.
+   * @param setpoint
+   *          The controller setpoint.
+   * @param arbFeedforward
+   *          An arbitrary feedforward output (from -1 to 1).
    */
-  public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward) {
+  public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward)
+  {
     ControlMode controlMode;
 
-    switch (mode) {
+    switch (mode)
+    {
       default :
       case kPosition :
         controlMode = ControlMode.Position;
@@ -113,21 +128,24 @@ public class ExampleSmartMotorController {
     m_motor.set(controlMode, rotationsToCounts(setpoint));
     DataLogManager.log("ControlMode: " + controlMode);
     DataLogManager.log("Setpoint: " + rotationsToCounts(setpoint));
-}
+  }
 
   /**
    * Places this motor controller in follower mode.
    *
-   * @param leader The leader to follow.
+   * @param leader
+   *          The leader to follow.
    */
-  public void follow(ExampleSmartMotorController leader) {}
+  public void follow(ExampleSmartMotorController leader)
+  {}
 
   /**
    * Returns the encoder distance.
    *
    * @return The current encoder distance.
    */
-  public double getEncoderDistance() {
+  public double getEncoderDistance( )
+  {
     return countsToRotations(m_motor.getSelectedSensorPosition(0));
   }
 
@@ -136,52 +154,63 @@ public class ExampleSmartMotorController {
    *
    * @return The current encoder rate.
    */
-  public double getEncoderRate() {
+  public double getEncoderRate( )
+  {
     return countsToRotations(m_motor.getSelectedSensorVelocity(0) * 10);
   }
 
   /** Resets the encoder to zero distance. */
-  public void resetEncoder() {
+  public void resetEncoder( )
+  {
     m_motor.setSelectedSensorPosition(0, 0, 0);
   }
 
   /**
    * used to set the constant speed of the motor, in percentOutput
    */
-  public void set(double voltage) { // set the speed of the motor using percent output
+  public void set(double voltage)
+  { // set the speed of the motor using percent output
     m_motor.set(ControlMode.PercentOutput, voltage);
   }
 
-  public double get() {
-    return m_motor.getMotorOutputPercent();
+  public double get( )
+  {
+    return m_motor.getMotorOutputPercent( );
   }
 
   /** Inverts motor direction */
-  public void setInverted(boolean isInverted) {
+  public void setInverted(boolean isInverted)
+  {
     m_motor.setInverted(isInverted);
   }
 
-  public boolean getInverted() {
-    return m_motor.getInverted();
+  public boolean getInverted( )
+  {
+    return m_motor.getInverted( );
   }
 
-  public double getClosedLoopError() {
-    return (m_motor.getClosedLoopError());
+  public double getClosedLoopError( )
+  {
+    return (m_motor.getClosedLoopError( ));
   }
 
-  public void disable() {
+  public void disable( )
+  {
     m_motor.set(ControlMode.Disabled, 0);
   }
 
-  public double getVelocity() {
-    return m_motor.getSelectedSensorVelocity();
+  public double getVelocity( )
+  {
+    return m_motor.getSelectedSensorVelocity( );
   }
+
   public TalonSRXSimCollection getMotorSimulation( )
   {
     return m_motorSim;
   }
- 
-  public void stopMotor() {
+
+  public void stopMotor( )
+  {
     set(0.0);
   }
 }
