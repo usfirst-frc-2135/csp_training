@@ -22,8 +22,8 @@
           "keyRate": 0.009999999776482582
         }
       ],
-      "axisCount": 3,
-      "buttonCount": 10,
+      "axisCount": 6,
+      "buttonCount": 11,
       "buttonKeys": [
         90,
         88,
@@ -31,6 +31,7 @@
         86,
         53,
         54,
+        -1,
         -1,
         -1,
         -1,
