@@ -17,6 +17,7 @@ public class Robot extends TimedRobot {
 
   private final static double kv = 8.0; // Max velocity - RPS
   private final static double ka = 16.0;
+  private double goal;
   //private final static TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(kv, ka);
 
   private final XboxController controller = new XboxController(0);
@@ -39,28 +40,47 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     // Note: These gains are fake, and will have to be tuned for your robot.
-    m_motor.setPID(0.5, 0.0, 0.0);
+    m_motor.setPID(0.125, 0.0, 0.0);
     DataLogManager.start();
 
     DataLogManager.log("Initial encoder position: " + m_motor.getEncoderDistance());
+    
   }
 
   @Override
   public void teleopPeriodic() {
+
+    SmartDashboard.putNumber("Goal", goal);
+    SmartDashboard.putNumber("Kp", m_motor.getKp());
+    SmartDashboard.putNumber("Error", m_motor.getClosedLoopError());
 
     SmartDashboard.putNumber("elevator rotations", m_motor.getEncoderDistance());
     if (controller.getAButtonPressed()) {
       m_motor.set(0.3);
       DataLogManager.log("A button pressed");
     } else if (controller.getBButtonPressed()) {
-      m_motor.set(-0.03);
+      m_motor.set(-0.3);
       DataLogManager.log("B button pressed");
     }
+
     if (controller.getRawButtonPressed(8)) {
+      if (m_motor.getInverted()) {
       m_motor.setInverted(false);
+      DataLogManager.log("Motor Inverted = false");
     } else {
       m_motor.setInverted(true);
+      DataLogManager.log("Motor Inverted = true");
+    }
+    }
 
+    if (controller.getXButtonPressed()) {
+      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 1.0, 0.0);
+      goal = 4096.0;
+    }
+
+    if (controller.getYButtonPressed()) {
+      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 0.0, 0.0);
+      goal = 0.0;
     }
 
     if (controller.getRightBumperPressed()) {
@@ -70,17 +90,19 @@ public class Robot extends TimedRobot {
 
     
 
+    
+
     //var profile = new TrapezoidProfile(m_Constraints, m_goal, m_setpoint);
-    var profile = new TrapezoidProfile(m_Constraints, m_goal, m_setpoint);
+    //var profile = new TrapezoidProfile(m_Constraints, m_goal, m_setpoint);
 
     // Retrieve the profiled setpoint for the next timestep. This setpoint moves
     // toward the goal while obeying the constraints.
-    m_setpoint = m_profile.calculate(kDt);
+    //m_setpoint = m_profile.calculate(kDt);
 
     // Send setpoint to offboard controller PID
-    m_motor.setSetpoint(
-        ExampleSmartMotorController.PIDMode.kPosition,
-        m_setpoint.position,
-        m_feedforward.calculate(m_setpoint.velocity) / 12.0);
+    // m_motor.setSetpoint(
+    //     ExampleSmartMotorController.PIDMode.kPosition,
+    //     m_setpoint.position,
+    //     m_feedforward.calculate(m_setpoint.velocity) / 12.0);
   }
 }

@@ -15,9 +15,9 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
  */
 public class ExampleSmartMotorController {
   WPI_TalonSRX m_motor;
-  private double kp;
-  private double ki;
-  private double kd;
+  private double m_kp = 0.0;
+  private double m_ki = 0.0;
+  private double m_kd = 0.0;
 
   //enum is short for enumeration, which means the action of mentioning a number of things one by one
   //Often represents specific categories or states, which is why the variables kPosition, kVelocity, and kMovementWitchcraft were placed here
@@ -47,9 +47,10 @@ public class ExampleSmartMotorController {
     
     m_motor = new WPI_TalonSRX(port);
     m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
-    m_motor.config_kP(0, kp);
-    m_motor.config_kI(0, ki);
-    m_motor.config_kD(0, kd);
+    m_motor.config_kP(0, m_kp);
+    m_motor.config_kI(0, m_ki);
+    m_motor.config_kD(0, m_kd);
+    setPID(m_kp, m_ki, m_kd);
   }
 
     private static double rotationsToCounts(double rotation) {
@@ -69,9 +70,18 @@ public class ExampleSmartMotorController {
    * @param kd The derivative gain.
    */
   public void setPID(double kp, double ki, double kd) {
-    this.kp = kp;
-    this.ki = ki;
-    this.kd = kd;
+    m_kp = kp;
+    m_ki = ki;
+    m_kd = kd;
+
+    m_motor.config_kP(0, m_kp);
+    m_motor.config_kI(0, m_ki);
+    m_motor.config_kD(0, m_kd);
+  }
+
+  public double getKp() {
+    return m_kp;
+
   }
 
 
@@ -134,10 +144,16 @@ public class ExampleSmartMotorController {
     m_motor.setSelectedSensorPosition(0, 0, 0);
   }
 
-  public void set(double voltage) {}
+  public void set(double voltage) {
+    m_motor.set(ControlMode.PercentOutput, voltage);
+  }
 
   public double get() {
     return m_motor.getMotorOutputPercent();
+  }
+
+  public double getClosedLoopError() {
+    return (m_motor.getClosedLoopError());
   }
 
   public void setInverted(boolean isInverted) {
