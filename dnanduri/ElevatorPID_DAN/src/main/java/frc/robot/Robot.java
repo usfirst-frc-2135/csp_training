@@ -16,6 +16,10 @@ public class Robot extends TimedRobot
 {
   private final static double                kDt           = 0.020;
 
+  // TODO:  these define a trapezoidal profile with a max velocity of 8.0 rps and acceleration of 16 rps/sec
+  //      further down, m_profile is created with a much slower profile of 1.75 rps and 0.75 rps/sec
+  //      and then after that m_constraints is defined with the faster setings
+  //      these are not used YET, but be aware that you have multiple (confilicting) profiles defined
   private final static double                kv            = 8.0; // Max velocity - RPS
   private final static double                ka            = 16.0;
   private double                             goal;
@@ -33,8 +37,8 @@ public class Robot extends TimedRobot
 
   private final TrapezoidProfile.Constraints m_Constraints = new TrapezoidProfile.Constraints(kv, ka);
 
-  private TrapezoidProfile.State             m_goal        = new TrapezoidProfile.State( );
-  private TrapezoidProfile.State             m_setpoint    = new TrapezoidProfile.State( );
+  private TrapezoidProfile.State             m_goal        = new TrapezoidProfile.State( );   // The desired end state of the movement
+  private TrapezoidProfile.State             m_setpoint    = new TrapezoidProfile.State( );   // The currently active state while making the movement
 
   @Override
   public void robotInit( )
@@ -44,22 +48,20 @@ public class Robot extends TimedRobot
     DataLogManager.start( );
 
     DataLogManager.log("Initial encoder position: " + m_motor.getEncoderDistance( ));
-
   }
 
   @Override
   public void teleopPeriodic( )
   {
-
     SmartDashboard.putNumber("Goal", goal);
-    SmartDashboard.putNumber("Kp", m_motor.getKp( ));
+    SmartDashboard.putNumber("Kp", m_motor.getKp( ));   // TODO: since the motor kp cannot be changed while running, this doesn't need to be in the periodic loop (put in robotInit after setPID)
     SmartDashboard.putNumber("Error", m_motor.getClosedLoopError( ));
 
     SmartDashboard.putNumber("elevator rotations", m_motor.getEncoderDistance( ));
     if (controller.getAButtonPressed( ))
     {
       m_motor.set(0.3);
-      DataLogManager.log("A button pressed");
+      DataLogManager.log("A button pressed"); // TODO: These log messages help greatly during debugging, why not do ALL the buttons while learning (X, Y, 8 are omitted)
     }
     else if (controller.getBButtonPressed( ))
     {
@@ -67,7 +69,7 @@ public class Robot extends TimedRobot
       DataLogManager.log("B button pressed");
     }
 
-    if (controller.getRawButtonPressed(8))
+    if (controller.getRawButtonPressed(8))  // TODO: I'll bet there's a named get<something>Pressed that is a better call than this
     {
       if (m_motor.getInverted( ))
       {
@@ -84,13 +86,13 @@ public class Robot extends TimedRobot
     if (controller.getXButtonPressed( ))
     {
       m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 1.0, 0.0);
-      goal = 4096.0;
+      goal = 4096.0;  // TODO: the goal (endpoint) will be in rotations (not counts), so it should be 1.0 and could be passed into the setSetpoint method above FOR THE PID MOVE
     }
 
     if (controller.getYButtonPressed( ))
     {
       m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 0.0, 0.0);
-      goal = 0.0;
+      goal = 0.0; // TODO: the goal (endpoint) will be in rotations (not counts), so it should be 1.0 and could be passed into the setSetpoint method above FOR THE PID MOVE
     }
 
     if (controller.getRightBumperPressed( ))
