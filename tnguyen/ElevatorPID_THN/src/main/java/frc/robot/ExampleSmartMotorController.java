@@ -6,6 +6,7 @@ package frc.robot;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -22,7 +23,11 @@ public class ExampleSmartMotorController {
   private double m_ki;
   private double m_kd;
 
-  private final static double kEncoderCPR = 4096;
+  private static double m_kEncoderCPR;
+
+public ExampleSmartMotorController(){};
+
+  private TalonSRXSimCollection m_motorSim;
   /**
    * COUNTS TO ROTATIONS
    * encoder reads values in counts, but human users input rotations for simplicity
@@ -30,11 +35,11 @@ public class ExampleSmartMotorController {
    */
 
   private double rotationsToCounts(double rotation) { 
-    return rotation * kEncoderCPR;
+    return rotation * m_kEncoderCPR;
   }
 
   private double countsToRotations(double encoderCounts) {
-    return encoderCounts / kEncoderCPR;
+    return encoderCounts / m_kEncoderCPR;
   }
 
   /**
@@ -53,13 +58,17 @@ public class ExampleSmartMotorController {
    * @param port The port for the controller.
    */
   @SuppressWarnings("PMD.UnusedFormalParameter")
-  public ExampleSmartMotorController(int port) {
+  public ExampleSmartMotorController(int ports, double kEncoderCPR) {
     m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder); 
     //encoder type in TalonSRX is quadrature encoder
     m_motor.selectProfileSlot(0, 0);
 
     setPID(m_kp, m_ki, m_kd);
+
+    m_motorSim = m_motor.getSimCollection( );
+    m_kEncoderCPR = kEncoderCPR;
   }
+
 
   /**
    * Example method for setting the PID gains of the smart controller.
@@ -177,4 +186,15 @@ public class ExampleSmartMotorController {
   public void stopMotor() {
     set(0.0);
   }
+
+  /**
+  * Return the motor simulation object for this controller
+  *
+  * @return motor simulation object
+  */
+ public TalonSRXSimCollection getMotorSimulation( )
+ {
+   return m_motorSim;
+ }
+
 }
