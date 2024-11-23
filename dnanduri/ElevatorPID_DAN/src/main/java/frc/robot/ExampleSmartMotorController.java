@@ -6,80 +6,79 @@ package frc.robot;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
-/**
- * A simplified stub class that simulates the API of a common "smart" motor controller.
- *
- * <p>
- * Has no actual functionality. TODO: No longer a valid comment--there's lots of stuff in this class
- * now (in a real project, we would fix this)
- */
-public class ExampleSmartMotorController
-{
-  WPI_TalonSRX   m_motor;
-  private double m_kp = 0.0;
-  private double m_ki = 0.0;
-  private double m_kd = 0.0;
+public class ExampleSmartMotorController {
+  public static final String kEncoderCPR = null;
+  WPI_TalonSRX m_motor;
+  private double m_kp;
+  private double m_ki;
+  private double m_kd;
 
-  // enum is short for enumeration, which means the action of mentioning a number of things one by one
-  // Often represents specific categories or states, which is why the variables kPosition, kVelocity, and kMovementWitchcraft were placed here
+  // enum is short for enumeration, which means the action of mentioning a number
+  // of things one by one
+  // Often represents specific categories or states, which is why the variables
+  // kPosition, kVelocity, and kMovementWitchcraft were placed here
   // They prevent errors from arbitrary strings or integers
   // enhances code readability, which makes it easier to read
   // Can be used in switch statements
   public enum PIDMode
+
   {
     kPosition, kVelocity, kMovementWitchcraft,
   }
 
-  private final static double kEncoderCPR = 4096;
-  private double              setpoint;
-  private PIDMode             mode;
+  private static double m_kEncoderCPR;
+  private double setpoint;
+  private PIDMode mode;
+  private TalonSRXSimCollection m_motorSim;
 
   /**
    * Creates a new ExampleSmartMotorController.
    *
    * @param port
-   *          The port for the controller.
+   *             The port for the controller.
    */
   @SuppressWarnings("PMD.UnusedFormalParameter")
   // The constructor initialises the motor with the given PID settings
   // It ensures the motor is ready to operate with these configurations
-  // The unused port parameter may be intended for future use - TODO: this comment is no longer needed (port is now used) -- delete it
-  public ExampleSmartMotorController(int port)
-  {
-    // This is the constructor; it specifies the CAN bus port that the motor controller is connected to
-
+  public ExampleSmartMotorController(int port) {
+    // This is the constructor; it specifies the CAN bus port that the motor
+    // controller is connected to
+    m_motorSim = m_motor.getSimCollection();
     m_motor = new WPI_TalonSRX(port);
     m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
-    m_motor.config_kP(0, m_kp); // TODO: Now that you're calling setPID a few lines below--these config_xx calls are redundant, right?
+    m_motor.config_kP(0, m_kp); // TODO: Now that you're calling setPID a few lines below--these config_xx calls
+                                // are redundant, right?
     m_motor.config_kI(0, m_ki);
     m_motor.config_kD(0, m_kd);
     setPID(m_kp, m_ki, m_kd);
   }
 
-  private static double rotationsToCounts(double rotation)
-  {
-    return rotation * kEncoderCPR;
+  public TalonSRXSimCollection getMotorSimulation() {
+    return m_motorSim;
   }
 
-  private static double countsToRotation(double counts)
-  {
-    return counts / kEncoderCPR;
+  private static double rotationsToCounts(double rotation) {
+    return rotation * m_kEncoderCPR;
+  }
+
+  private static double countsToRotation(double counts) {
+    return counts / m_kEncoderCPR;
   }
 
   /**
    * Example method for setting the PID gains of the smart controller.
    *
    * @param kp
-   *          The proportional gain.
+   *           The proportional gain.
    * @param ki
-   *          The integral gain.
+   *           The integral gain.
    * @param kd
-   *          The derivative gain.
+   *           The derivative gain.
    */
-  public void setPID(double kp, double ki, double kd)
-  {
+  public void setPID(double kp, double ki, double kd) {
     m_kp = kp;
     m_ki = ki;
     m_kd = kd;
@@ -90,8 +89,7 @@ public class ExampleSmartMotorController
     m_motor.config_kD(0, m_kd);
   }
 
-  public double getKp( )
-  {
+  public double getKp() {
     return m_kp;
   }
 
@@ -99,29 +97,29 @@ public class ExampleSmartMotorController
    * Example method for setting the setpoint of the smart controller in PID mode.
    *
    * @param mode
-   *          The mode of the PID controller.
+   *                       The mode of the PID controller.
    * @param setpoint
-   *          The controller setpoint in rotations or rotations per second
+   *                       The controller setpoint in rotations or rotations per
+   *                       second
    * @param arbFeedforward
-   *          An arbitrary feedforward output (from -1 to 1 for percentOutput).
+   *                       An arbitrary feedforward output (from -1 to 1 for
+   *                       percentOutput).
    */
-  public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward)
-  {
+  public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward) {
     ControlMode controlMode;
 
-    switch (mode)
-    {
-      default :
-      case kPosition :
+    switch (mode) {
+      default:
+      case kPosition:
         controlMode = ControlMode.Position;
         break;
 
-      case kVelocity :
+      case kVelocity:
         controlMode = ControlMode.Velocity;
         setpoint /= 10;
         break;
 
-      case kMovementWitchcraft :
+      case kMovementWitchcraft:
         controlMode = ControlMode.MotionMagic;
         break;
     }
@@ -134,19 +132,18 @@ public class ExampleSmartMotorController
    * Places this motor controller in follower mode.
    *
    * @param leader
-   *          The leader to follow.
+   *               The leader to follow.
    */
-  public void follow(ExampleSmartMotorController leader)
-  {}
+  public void follow(ExampleSmartMotorController leader) {
+  }
 
   /**
    * Returns the encoder distance.
    *
    * @return The current encoder distance.
    */
-  public double getEncoderDistance( )
-  {
-    return countsToRotation(m_motor.getSelectedSensorPosition( ));
+  public double getEncoderDistance() {
+    return countsToRotation(m_motor.getSelectedSensorPosition());
   }
 
   /**
@@ -154,62 +151,56 @@ public class ExampleSmartMotorController
    *
    * @return The current encoder rate.
    */
-  public double getEncoderRate( )
-  {
+  public double getEncoderRate() {
     return countsToRotation(m_motor.getSelectedSensorVelocity(0) * 10);
   }
 
   /** Resets the encoder to zero distance. */
-  public void resetEncoder( )
-  {
+  public void resetEncoder() {
     // TODO: It would be nice to log when the encoder is reset, yes?
     m_motor.setSelectedSensorPosition(0, 0, 0);
   }
 
-  // TODO: since we're using percentOutput mode, change this parameter name (voltage)
-  //    There are two different ways to command a motor directly: percentOutput and voltage
-  //        Mode          percentOutput     voltage
-  //        Full reverse  -1.0              -12.0
-  //        Stopped       0.0               0.0
-  //        Full forward  1.0               12.0
+  // TODO: since we're using percentOutput mode, change this parameter name
+  // (voltage)
+  // There are two different ways to command a motor directly: percentOutput and
+  // voltage
+  // Mode percentOutput voltage
+  // Full reverse -1.0 -12.0
+  // Stopped 0.0 0.0
+  // Full forward 1.0 12.0
   // For this project, we're only using percentOutput modes (for consistency)
   //
-  public void set(double voltage)
-  {
+  public void set(double voltage) {
     // TODO: It would be nice to log the new setting once applied yes?
     m_motor.set(ControlMode.PercentOutput, voltage);
   }
 
-  public double get( )
-  {
-    return m_motor.getMotorOutputPercent( );
+  public double get() {
+    return m_motor.getMotorOutputPercent();
   }
 
-  public double getClosedLoopError( )
-  {
-    return (m_motor.getClosedLoopError( ));
+  public double getClosedLoopError() {
+    return (m_motor.getClosedLoopError());
   }
 
-  public void setInverted(boolean isInverted)
-  {
+  public void setInverted(boolean isInverted) {
     // TODO: It would be nice to log when the inversion state is changed, yes?
     m_motor.setInverted(isInverted);
   }
 
-  public boolean getInverted( )
-  {
-    return m_motor.getInverted( );
+  public boolean getInverted() {
+    return m_motor.getInverted();
   }
 
-  public void disable( )
-  {
+  public void disable() {
     // TODO: It would be nice to log when the motor is disabled, yes?
     m_motor.set(ControlMode.Disabled, 0);
   }
 
-  public void stopMotor( )
-  {
+  public void stopMotor() {
     // TODO: It would be nice to log when the motor gets stopped, yes?
     set(0.0);
   }
+
 }
