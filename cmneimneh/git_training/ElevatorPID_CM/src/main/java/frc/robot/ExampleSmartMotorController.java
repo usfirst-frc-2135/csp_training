@@ -19,13 +19,27 @@ import edu.wpi.first.wpilibj.DataLogManager;
 
 public class ExampleSmartMotorController
 {
-  private final WPI_TalonSRX    m_motor    = new WPI_TalonSRX(5);
+  private WPI_TalonSRX          m_motor;
   private double                m_kp;
   private double                m_ki;
   private double                m_kd;
-  private static double         m_kEncoderCPR;
+  private double                m_EncoderCPR;
 
-  private TalonSRXSimCollection m_motorSim = new TalonSRXSimCollection(m_motor);
+  private TalonSRXSimCollection m_motorSim;
+
+  public ExampleSmartMotorController(int ports, double kEncoderCPR)
+  {
+    m_motor = new WPI_TalonSRX(ports);
+    m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
+
+    m_EncoderCPR = kEncoderCPR;
+
+    //encoder type in TalonSRX is quadrature encoder
+    m_motor.selectProfileSlot(0, 0);
+    m_motorSim = m_motor.getSimCollection( );
+    setPID(m_kp, m_ki, m_kd);
+    DataLogManager.start( );
+  }
 
   /**
    * COUNTS TO ROTATIONS
@@ -35,12 +49,12 @@ public class ExampleSmartMotorController
 
   private double rotationsToCounts(double rotation)
   {
-    return rotation * m_kEncoderCPR;
+    return rotation * m_EncoderCPR;
   }
 
   private double countsToRotations(double encoderCounts)
   {
-    return encoderCounts / m_kEncoderCPR;
+    return encoderCounts / m_EncoderCPR;
   }
 
   /**
@@ -59,15 +73,6 @@ public class ExampleSmartMotorController
    *          The port for the controller.
    */
   @SuppressWarnings("PMD.UnusedFormalParameter")
-  public ExampleSmartMotorController(int port, double kEncoderCPR)
-  {
-    m_kEncoderCPR = kEncoderCPR;
-    m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
-    //encoder type in TalonSRX is quadrature encoder
-    m_motor.selectProfileSlot(0, 0);
-
-    setPID(m_kp, m_ki, m_kd);
-  }
 
   /**
    * Example method for setting the PID gains of the smart controller.
@@ -87,6 +92,7 @@ public class ExampleSmartMotorController
     m_motor.config_kP(0, kp);
     m_motor.config_kI(0, ki);
     m_motor.config_kD(0, kd);
+    DataLogManager.log("PID changed");
   }
 
   public double getKp( )
@@ -126,8 +132,7 @@ public class ExampleSmartMotorController
     }
 
     m_motor.set(controlMode, rotationsToCounts(setpoint));
-    DataLogManager.log("ControlMode: " + controlMode);
-    DataLogManager.log("Setpoint: " + rotationsToCounts(setpoint));
+    DataLogManager.log("ControlMode: " + controlMode + " Setpoint: " + setpoint);
   }
 
   /**
@@ -163,6 +168,7 @@ public class ExampleSmartMotorController
   public void resetEncoder( )
   {
     m_motor.setSelectedSensorPosition(0, 0, 0);
+    DataLogManager.log("Encoder voltage reset");
   }
 
   /**
@@ -182,6 +188,7 @@ public class ExampleSmartMotorController
   public void setInverted(boolean isInverted)
   {
     m_motor.setInverted(isInverted);
+    DataLogManager.log("Motor inverted");
   }
 
   public boolean getInverted( )
@@ -197,6 +204,7 @@ public class ExampleSmartMotorController
   public void disable( )
   {
     m_motor.set(ControlMode.Disabled, 0);
+    DataLogManager.log("Motor disabled");
   }
 
   public double getVelocity( )
@@ -212,5 +220,6 @@ public class ExampleSmartMotorController
   public void stopMotor( )
   {
     set(0.0);
+    DataLogManager.log("Motor stopped");
   }
 }

@@ -15,26 +15,27 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Robot extends TimedRobot
 {
-  public static double                      kDt           = 0.02;
+  private static double                     kDt           = 0.02;
   private double                            goal;
   private final static double               kEncoderCPR   = 4096;
 
   private final XboxController              m_controller  = new XboxController(0);
   private final ExampleSmartMotorController m_motor       = new ExampleSmartMotorController(5, kEncoderCPR);
   private final SimpleMotorFeedforward      m_feedforward = new SimpleMotorFeedforward(1, 1.5);
-  private final TrapezoidProfile            m_profile     = new TrapezoidProfile(new TrapezoidProfile.Constraints(1.0, 2.0));
+  private final TrapezoidProfile            m_profile     = new TrapezoidProfile(new TrapezoidProfile.Constraints(1.0, 1.0));
   private TrapezoidProfile.State            m_goal        = new TrapezoidProfile.State( );
   private TrapezoidProfile.State            m_setpoint    = new TrapezoidProfile.State( );
 
   private final TalonSRXSimCollection       m_motorSim    = m_motor.getMotorSimulation( );
   private final ElevSim                     m_elevSim     = new ElevSim(m_motorSim, kEncoderCPR);
+  private boolean                           m_pidEnabled  = false;
 
   @Override
   public void robotInit( )
   {
-    // Note: These gains are fake, and will have to be tuned for your robot.
-    m_motor.setPID(0.27, 0.0, 0.0);
+    m_motor.setPID(0.38, 0.0, 0.0);
     m_motor.resetEncoder( );
+    m_elevSim.periodic( );
     DataLogManager.start( );
   }
 
@@ -73,61 +74,57 @@ public class Robot extends TimedRobot
 
     if (m_controller.getAButtonPressed( ))
     { // if A button pressed, set voltage of 0.3
+      m_pidEnabled = false;
+      DataLogManager.log("PID Disabled");
       m_motor.set(0.3);
       DataLogManager.log("A Button Pressed -- Voltage PercentOutput: 0.3");
     }
 
     if (m_controller.getBButtonPressed( ))
     { // if B button pressed, set voltage of -0.3
+      m_pidEnabled = false;
+      DataLogManager.log("PID Disabled");
       m_motor.set(-0.3);
       DataLogManager.log("B Button Pressed -- Voltage PercentOutput: -0.3");
     }
 
     if (m_controller.getXButtonPressed( ))
-    { // if X button pressed, set PID at setpoint of 1.0
-     // m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 1.0, 0); 
-     // DataLogManager.log("X Button Pressed -- PID Setpoint: 1.0");
-     // goal = 4096.0;
-      m_goal = new TrapezoidProfile.State(5, 0); // test this value (position value :)
+    {
+      m_pidEnabled = true;
+      DataLogManager.log("PID Enabled");
+      m_goal = new TrapezoidProfile.State(3, 0);
       DataLogManager.log("X Button Pressed -- Trapezoid Profile Setpoint: 1.0");
     }
 
     if (m_controller.getYButtonPressed( ))
-    { // if Y button pressed, set PID at setpoint of 0.0
-     // m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 0.0, 0);
-     // DataLogManager.log("Y Button Pressed -- PID Setpoint: 0.0");
-     // goal = 0.0;
-      m_goal = new TrapezoidProfile.State(0, 0); // test this value (position value :)
+    {
+      m_pidEnabled = true;
+      DataLogManager.log("PID Enabled");
+      m_goal = new TrapezoidProfile.State(0, 0);
       DataLogManager.log("Y Button Pressed -- Trapezoid Profile Setpoint: 0.0");
     }
 
-    // TODO: 
-    //        We want this block to run ONLY when given a goal above (when X or Y is pressed), but we want it to
-    //        run for both cases. Arbitrary feedforward will be 0.0 for you (we can talk about when to use
-    //        it in person). Do the following:
-    //
-    //        1) Make a flag (boolean) that is set in the X and Y button cases above to start a movement
-    //        2) Use the flag to enable this code block with the "if" (replace the "true")
-    //        3) In the block below, when the movement is finished, be sure to clear that flag
-    //
-    //        Put useful info to the dashboard to debug (logging is good for state changes, not spamming messages
-    //        to the console).
-    //
-    if (true)
+    if (m_pidEnabled)
     {
       m_setpoint = m_profile.calculate(kDt, m_setpoint, m_goal);
-      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, m_setpoint.position, 0.0); // why divide by 12?
+      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, m_setpoint.position,
+          m_feedforward.calculate(m_setpoint.velocity) / 12.0); // why divide by 12?
+
     }
 
     if (m_controller.getRightBumperPressed( ))
     { // if Right Bumper pressed, stop Motor
+      m_pidEnabled = false;
+      DataLogManager.log("PID Disabled");
       m_motor.stopMotor( );
       DataLogManager.log("Right Bumper Pressed -- Motor Stopped");
     }
 
     if (m_controller.getRawButtonPressed(8))
     { // if menu button, invert motor direction
-      DataLogManager.log("Menu Button Pressed"); // controller is not reading the button being pressed?
+      DataLogManager.log("Menu Button Pressed");
+      m_pidEnabled = false;
+      DataLogManager.log("PID Disabled");
       if (m_motor.getInverted( ))
       {
         m_motor.setInverted(false);
