@@ -19,9 +19,6 @@ import edu.wpi.first.wpilibj.DataLogManager;
  */
 public class ExampleSmartMotorController
 {
-  // TODO: Keep your constants and variables at the top of the class--it's where people look for them
-  //      I moved PIDMode and m_motorSim up here
-
   /**
    * declares PIDMode as an enum
    * PIDMode used to determine controlmode
@@ -31,22 +28,14 @@ public class ExampleSmartMotorController
     kPosition, kVelocity, kMovementWitchcraft
   }
 
-  // TODO:  Since we don't want to have this configure a specific motor controller (5) as a default
-  //        the "port" definition coming in will initialize a WPI_TalonSRX with the correct port
-  //        also, "final" means this m_motor cannot be changed (ever), so just declare an m_motor
-  //        variable without "final" and without the initialization "= new WPI_TalonSRX(5)"
-  private final WPI_TalonSRX    m_motor = new WPI_TalonSRX(5);
+  private WPI_TalonSRX          m_motor;
   private TalonSRXSimCollection m_motorSim;
 
   private double                m_kp;
   private double                m_ki;
   private double                m_kd;
 
-  private static double         m_kEncoderCPR;  // TODO: Since this is no longer a constant (within this class), remove the "k"
-  // And the "static" is probably not needed (although won't cause an error)
-
-  // TODO: Keep your constructors at the top of the class--it's where everyone will look for them
-  //      I moved yours here
+  private double                m_EncoderCPR;
 
   /**
    * Creates a new ExampleSmartMotorController.
@@ -57,6 +46,7 @@ public class ExampleSmartMotorController
   @SuppressWarnings("PMD.UnusedFormalParameter")
   public ExampleSmartMotorController(int ports, double kEncoderCPR)
   {
+    m_motor = new WPI_TalonSRX(ports);
     m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
     //encoder type in TalonSRX is quadrature encoder
     m_motor.selectProfileSlot(0, 0);
@@ -64,13 +54,9 @@ public class ExampleSmartMotorController
     setPID(m_kp, m_ki, m_kd);
 
     m_motorSim = m_motor.getSimCollection( );
-    m_kEncoderCPR = kEncoderCPR;
+    m_EncoderCPR = kEncoderCPR;
+    DataLogManager.start( );
   }
-
-  // TODO: Our new usage now requires a port and encoder parameter
-  //        delete this now unused constructor interface below
-  public ExampleSmartMotorController( )
-  {};
 
   /**
    * COUNTS TO ROTATIONS
@@ -80,12 +66,12 @@ public class ExampleSmartMotorController
 
   private double rotationsToCounts(double rotations)
   {
-    return rotations * m_kEncoderCPR;
+    return rotations * m_EncoderCPR;
   }
 
   private double countsToRotations(double encoderCounts)
   {
-    return encoderCounts / m_kEncoderCPR;
+    return encoderCounts / m_EncoderCPR;
   }
 
   /**
@@ -106,7 +92,8 @@ public class ExampleSmartMotorController
     m_motor.config_kP(0, kp);
     m_motor.config_kI(0, ki);
     m_motor.config_kD(0, kd);
-    // TODO: It would be nice to log when the PID is changed, yes?
+    // TODO: It would be nice to log when the PID is changed, yes? yessssssss
+    DataLogManager.log("PID Changed ;)");
   }
 
   public double getKp( )
@@ -146,12 +133,7 @@ public class ExampleSmartMotorController
     }
 
     m_motor.set(controlMode, rotationsToCounts(setpoint));
-    // TODO: You'll find that when you log stuff on separate lines, it increases the "spam" factor to the console
-    //        Put this on one line. This would also make it easy to cut and paste in to a spreadsheet for plotting if needed.
-    //        And just display the passed in setpoint, not the value going to the motors
     DataLogManager.log("ControlMode: " + controlMode + " Setpoint: " + setpoint);
-    // DataLogManager.log("ControlMode: " + controlMode);
-    // DataLogManager.log("Setpoint: " + rotationsToCounts(setpoint));
   }
 
   /**
@@ -186,8 +168,8 @@ public class ExampleSmartMotorController
   /** Resets the encoder to zero distance. */
   public void resetEncoder( )
   {
-    // TODO: It would be nice to log when the encoder is reset, yes?
     m_motor.setSelectedSensorPosition(0, 0, 0);
+    DataLogManager.log("Encoder Reset :)");
   }
 
   /**
@@ -195,8 +177,8 @@ public class ExampleSmartMotorController
    */
   public void set(double voltage)
   { // set the speed of the motor using percent output
-   // TODO: It would be nice to log when the motor speed is changed, yes?
     m_motor.set(ControlMode.PercentOutput, voltage);
+    DataLogManager.log("Encoder Voltage Changed");
   }
 
   public double get( )
@@ -207,8 +189,8 @@ public class ExampleSmartMotorController
   /** Inverts motor direction */
   public void setInverted(boolean isInverted)
   {
-    // TODO: It would be nice to log when the inversion is changed, yes?
     m_motor.setInverted(isInverted);
+    DataLogManager.log("Motor Inverted Successfully");
   }
 
   public boolean getInverted( )
@@ -223,8 +205,8 @@ public class ExampleSmartMotorController
 
   public void disable( )
   {
-    // TODO: It would be nice to log when the motor is disabled, yes?
     m_motor.set(ControlMode.Disabled, 0);
+    DataLogManager.log("Motor disabled");
   }
 
   public double getVelocity( )
@@ -234,8 +216,8 @@ public class ExampleSmartMotorController
 
   public void stopMotor( )
   {
-    // TODO: It would be nice to log when the motor is stopped, yes?
     set(0.0);
+    DataLogManager.log("Motor stopped");
   }
 
   /**
@@ -247,5 +229,4 @@ public class ExampleSmartMotorController
   {
     return m_motorSim;
   }
-
 }
