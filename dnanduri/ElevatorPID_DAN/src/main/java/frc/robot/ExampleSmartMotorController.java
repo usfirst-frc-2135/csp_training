@@ -9,6 +9,13 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.simulation.BatterySim;
+import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import edu.wpi.first.wpilibj.simulation.RoboRioSim;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 public class ExampleSmartMotorController {
   public static final String kEncoderCPR = null;
   WPI_TalonSRX m_motor;
@@ -28,6 +35,8 @@ public class ExampleSmartMotorController {
   {
     kPosition, kVelocity, kMovementWitchcraft,
   }
+
+  
 
   private static double m_kEncoderCPR;
   private double setpoint;

@@ -4,15 +4,22 @@
 
 package frc.robot;
 
+import java.security.PrivateKey;
+
 import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.simulation.BatterySim;
+import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.RobotController;
 
 public class Robot extends TimedRobot {
 
@@ -38,13 +45,54 @@ public class Robot extends TimedRobot {
   private final TrapezoidProfile.Constraints m_Constraints = new TrapezoidProfile.Constraints(kv, ka);
 
   private TrapezoidProfile.State m_setpoint = new TrapezoidProfile.State();
-
+  private final  TalonSRXSimCollection m_motorSim = m_motor.getMotorSimulation();
+  private final ElevSim m_elevSim = new ElevSim(m_motorSim, kEncoderCPR);
   public class ElevSim {
-    private final static TalonSRXSimCollection m_motorSim = m_motor.getMotorSimulation();
-    // private final static ElevSim m_elevSim = new ElevSim(m_motorSim,
-    // kEncoderCPR);
-  }
+    private static final double kGearRatio = 40.0;
+    private static final double kCarriageMassKg = 2.0;
+    private static final double kDrumDiameterMeters = 2.0 / 39.37;  // Drum diameter in meters (make meter = rotation)
+    private static final double kLengthMeters = 10.0;         // Maximum length in meters
+    private static final double kDrumCircumMeters = kDrumDiameterMeters * Math.PI;      // Drum diameter in meters
+    // private static final double   kRolloutRatioMeters = kDrumCircumMeters / kGearRatio;     // Meters per shaft rotation
 
+
+    private final ElevatorSim m_elevatorSim = new ElevatorSim(DCMotor.getVex775Pro(1), kGearRatio, kCarriageMassKg, kDrumDiameterMeters / 2, -kLengthMeters, kLengthMeters, false, 0.0);
+
+
+    private TalonSRXSimCollection m_motorSim;
+    private double m_cpr;
+    
+    public ElevSim(TalonSRXSimCollection motorSim, double encoderCPR) {
+      m_motorSim = motorSim;
+      m_cpr = encoderCPR;
+
+    }
+
+    public void periodic() {
+      m_motorSim.setBusVoltage(RobotController.getInputVoltage());
+      m_elevatorSim.setInput(m_motorSim.getMotorOutputLeadVoltage());
+
+      m_elevatorSim.update(0.020);
+
+      m_motorSim.setQuadratureRawPosition((int) (m_cpr * m_elevatorSim.getPositionMeters() / kDrumCircumMeters));
+      m_motorSim.setQuadratureVelocity((int) (m_cpr * (m_elevatorSim.getVelocityMetersPerSecond() / kDrumCircumMeters) / 10));
+
+      RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(m_elevatorSim.getCurrentDrawAmps()));
+
+      SmartDashboard.putNumber("SIM-motorVolts", m_motorSim.getMotorOutputLeadVoltage());
+      SmartDashboard.putNumber("SIM-elevPos", m_elevatorSim.getPositionMeters( ));
+      SmartDashboard.putNumber("SIM-elevVel", m_elevatorSim.getVelocityMetersPerSecond( ));
+  
+    }
+
+    public void reset() {
+      m_motorSim.setQuadratureRawPosition((int) (m_cpr * m_elevatorSim.getPositionMeters() / kDrumCircumMeters));
+      m_motorSim.setQuadratureVelocity((int) (m_cpr * (m_elevatorSim.getVelocityMetersPerSecond() / kDrumCircumMeters) / 10));
+
+      m_elevatorSim.setState(0.0, 0.0);
+      m_elevatorSim.setInput(0.0);
+    }
+  }
   @Override
   public void robotInit() {
     // Note: These gains are fake, and will have to be tuned for your robot.
@@ -59,7 +107,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
-    // m_elevSim.periodic();
+    m_elevSim.periodic();
     SmartDashboard.putNumber("Goal", goal);
     SmartDashboard.putNumber("Kp", m_motor.getKp());
     SmartDashboard.putNumber("Error", m_motor.getClosedLoopError());
