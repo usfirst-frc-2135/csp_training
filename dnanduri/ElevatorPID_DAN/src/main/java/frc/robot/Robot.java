@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import java.security.PrivateKey;
-
 import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -63,7 +61,8 @@ public class Robot extends TimedRobot {
     private double m_cpr;
     
     public ElevSim(TalonSRXSimCollection motorSim, double encoderCPR) {
-      m_motorSim = motorSim;
+      TalonSRXSimCollection motorSim2 = motorSim;
+      m_motorSim = motorSim2;
       m_cpr = encoderCPR;
 
     }
@@ -132,12 +131,12 @@ public class Robot extends TimedRobot {
     }
 
     if (controller.getXButtonPressed()) {
-      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 1.0, 0.0);
+      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, m_setpoint.position, 0.0);
       goal = 4096.0;
     }
 
     if (controller.getYButtonPressed()) {
-      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 0.0, 0.0);
+      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, m_setpoint.position, 0.0);
       goal = 0.0;
     }
 

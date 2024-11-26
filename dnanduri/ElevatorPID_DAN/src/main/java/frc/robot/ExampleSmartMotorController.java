@@ -9,14 +9,12 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.simulation.BatterySim;
-import edu.wpi.first.wpilibj.simulation.ElevatorSim;
-import edu.wpi.first.wpilibj.simulation.RoboRioSim;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.DataLogManager;
 
 public class ExampleSmartMotorController {
+  public ExampleSmartMotorController(int port) {
+    // constructor implementation
+}
   public static final String kEncoderCPR = null;
   WPI_TalonSRX m_motor;
   private double m_kp;
@@ -52,17 +50,15 @@ public class ExampleSmartMotorController {
   @SuppressWarnings("PMD.UnusedFormalParameter")
   // The constructor initialises the motor with the given PID settings
   // It ensures the motor is ready to operate with these configurations
-  public ExampleSmartMotorController(int port) {
+  public ExampleSmartMotorController(int port, double kEncoderCPR) {
+    m_motor = new WPI_TalonSRX(5);
     // This is the constructor; it specifies the CAN bus port that the motor
     // controller is connected to
     m_motorSim = m_motor.getSimCollection();
     m_motor = new WPI_TalonSRX(port);
     m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
-    m_motor.config_kP(0, m_kp); // TODO: Now that you're calling setPID a few lines below--these config_xx calls
-                                // are redundant, right?
-    m_motor.config_kI(0, m_ki);
-    m_motor.config_kD(0, m_kd);
     setPID(m_kp, m_ki, m_kd);
+    DataLogManager.start();
   }
 
   public TalonSRXSimCollection getMotorSimulation() {
@@ -96,6 +92,7 @@ public class ExampleSmartMotorController {
     m_motor.config_kP(0, m_kp);
     m_motor.config_kI(0, m_ki);
     m_motor.config_kD(0, m_kd);
+    DataLogManager.log("PID");
   }
 
   public double getKp() {
@@ -113,7 +110,10 @@ public class ExampleSmartMotorController {
    * @param arbFeedforward
    *                       An arbitrary feedforward output (from -1 to 1 for
    *                       percentOutput).
+   * 
    */
+
+   //void means you don't return anything
   public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward) {
     ControlMode controlMode;
 
@@ -133,8 +133,9 @@ public class ExampleSmartMotorController {
         break;
     }
 
-    // TODO: It would be nice to log when the setpoint is chaged, yes?
+    
     m_motor.set(controlMode, rotationsToCounts(setpoint));
+    DataLogManager.log("ControlMode " + controlMode + " Setpoint " + setpoint);
   }
 
   /**
@@ -166,8 +167,8 @@ public class ExampleSmartMotorController {
 
   /** Resets the encoder to zero distance. */
   public void resetEncoder() {
-    // TODO: It would be nice to log when the encoder is reset, yes?
     m_motor.setSelectedSensorPosition(0, 0, 0);
+    DataLogManager.log("Encoder voltage reset");
   }
 
   // TODO: since we're using percentOutput mode, change this parameter name
@@ -180,9 +181,9 @@ public class ExampleSmartMotorController {
   // Full forward 1.0 12.0
   // For this project, we're only using percentOutput modes (for consistency)
   //
-  public void set(double voltage) {
-    // TODO: It would be nice to log the new setting once applied yes?
-    m_motor.set(ControlMode.PercentOutput, voltage);
+  public void set(double percentOutput) {
+    m_motor.set(ControlMode.PercentOutput, percentOutput);
+    DataLogManager.log("percent Voltage: " + ControlMode.PercentOutput);
   }
 
   public double get() {
@@ -194,8 +195,9 @@ public class ExampleSmartMotorController {
   }
 
   public void setInverted(boolean isInverted) {
-    // TODO: It would be nice to log when the inversion state is changed, yes?
     m_motor.setInverted(isInverted);
+    DataLogManager.log("Motor is inverted");
+
   }
 
   public boolean getInverted() {
@@ -203,13 +205,14 @@ public class ExampleSmartMotorController {
   }
 
   public void disable() {
-    // TODO: It would be nice to log when the motor is disabled, yes?
     m_motor.set(ControlMode.Disabled, 0);
+    DataLogManager.log("Disabled");
   }
 
+
   public void stopMotor() {
-    // TODO: It would be nice to log when the motor gets stopped, yes?
     set(0.0);
+    DataLogManager.log("Stopped");
   }
 
 }
