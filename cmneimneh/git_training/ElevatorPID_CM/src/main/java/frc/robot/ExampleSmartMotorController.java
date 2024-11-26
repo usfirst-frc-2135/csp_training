@@ -84,6 +84,10 @@ public class ExampleSmartMotorController
    * @param kd
    *          The derivative gain.
    */
+
+  /*
+  *configure kp, ki, and kd based on values passed in Robot.java
+  */
   public void setPID(double kp, double ki, double kd)
   {
     m_kp = kp;
@@ -95,6 +99,9 @@ public class ExampleSmartMotorController
     DataLogManager.log("PID changed");
   }
 
+  /*
+  *return kp value
+  */
   public double getKp( )
   {
     return m_kp;
@@ -110,6 +117,8 @@ public class ExampleSmartMotorController
    * @param arbFeedforward
    *          An arbitrary feedforward output (from -1 to 1).
    */
+
+  //
   public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward)
   {
     ControlMode controlMode;
@@ -168,15 +177,15 @@ public class ExampleSmartMotorController
   public void resetEncoder( )
   {
     m_motor.setSelectedSensorPosition(0, 0, 0);
-    DataLogManager.log("Encoder voltage reset");
+    DataLogManager.log("Encoder reset");
   }
 
   /**
    * used to set the constant speed of the motor, in percentOutput
    */
-  public void set(double voltage)
+  public void set(double percentOutput)
   { // set the speed of the motor using percent output
-    m_motor.set(ControlMode.PercentOutput, voltage);
+    m_motor.set(ControlMode.PercentOutput, percentOutput);
   }
 
   public double get( )
@@ -209,7 +218,7 @@ public class ExampleSmartMotorController
 
   public double getVelocity( )
   {
-    return m_motor.getSelectedSensorVelocity( );
+    return countsToRotations(m_motor.getSelectedSensorVelocity( ));
   }
 
   public TalonSRXSimCollection getMotorSimulation( )

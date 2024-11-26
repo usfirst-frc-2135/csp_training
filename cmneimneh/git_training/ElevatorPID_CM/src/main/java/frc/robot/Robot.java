@@ -42,28 +42,6 @@ public class Robot extends TimedRobot
   @Override
   public void teleopPeriodic( )
   {
-    /*
-     * if (m_joystick.getRawButtonPressed(2)) {
-     * m_goal = new TrapezoidProfile.State(5, 0);
-     * } else if (m_joystick.getRawButtonPressed(3)) {
-     * m_goal = new TrapezoidProfile.State();
-     * }
-     * 
-     * // Retrieve the profiled setpoint for the next timestep. This setpoint moves
-     * // toward the goal while obeying the constraints.
-     * m_setpoint = m_profile.calculate(kDt, m_setpoint, m_goal);
-     * 
-     * // Send setpoint to offboard controller PID
-     * m_motor.setSetpoint(
-     * ExampleSmartMotorController.PIDMode.kPosition,
-     * m_setpoint.position,
-     * m_feedforward.calculate(m_setpoint.velocity) / 12.0);
-     */
-
-    // SmartDashboard.putNumber("Elevator Rotations", m_motor.getEncoderDistance());
-    // SmartDashboard.putNumber("Target", goal);
-    // SmartDashboard.putNumber("Error", m_motor.getClosedLoopError());
-
     SmartDashboard.putNumber("Elevator Rotations", m_motor.getEncoderDistance( ));
     SmartDashboard.putNumber("Target", goal);
     SmartDashboard.putNumber("Error", m_motor.getClosedLoopError( ));
@@ -71,6 +49,26 @@ public class Robot extends TimedRobot
     SmartDashboard.putNumber("Velocity", m_motor.getVelocity( ));
 
     m_elevSim.periodic( );
+
+    if (m_controller.getRightBumperPressed( ))
+    { // if Right Bumper pressed, stop Motor
+      m_pidEnabled = false;
+      DataLogManager.log("PID Disabled");
+      m_motor.stopMotor( );
+      DataLogManager.log("Right Bumper Pressed -- Motor Stopped");
+    }
+
+    if (m_controller.getRawButtonPressed(8))
+    { // if menu button, invert motor direction
+      DataLogManager.log("Menu Button Pressed");
+      m_pidEnabled = false;
+      DataLogManager.log("PID Disabled");
+
+      m_motor.setInverted(!m_motor.getInverted( ));
+      DataLogManager.log("Motor Inverted -- " + m_motor.getInverted( ));
+      DataLogManager.log(String.format("Motor Inverted -- %s", m_motor.getInverted( ) ? "true" : "false"));
+      DataLogManager.log(String.format("Motor Output -- %.1f", m_motor.get( )));
+    }
 
     if (m_controller.getAButtonPressed( ))
     { // if A button pressed, set voltage of 0.3
@@ -107,34 +105,10 @@ public class Robot extends TimedRobot
     if (m_pidEnabled)
     {
       m_setpoint = m_profile.calculate(kDt, m_setpoint, m_goal);
-      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, m_setpoint.position,
-          m_feedforward.calculate(m_setpoint.velocity) / 12.0); // why divide by 12?
-
-    }
-
-    if (m_controller.getRightBumperPressed( ))
-    { // if Right Bumper pressed, stop Motor
-      m_pidEnabled = false;
-      DataLogManager.log("PID Disabled");
-      m_motor.stopMotor( );
-      DataLogManager.log("Right Bumper Pressed -- Motor Stopped");
-    }
-
-    if (m_controller.getRawButtonPressed(8))
-    { // if menu button, invert motor direction
-      DataLogManager.log("Menu Button Pressed");
-      m_pidEnabled = false;
-      DataLogManager.log("PID Disabled");
-      if (m_motor.getInverted( ))
-      {
-        m_motor.setInverted(false);
-        DataLogManager.log("Motor Inverted -- False");
-      }
-      else
-      {
-        m_motor.setInverted(true);
-        DataLogManager.log("Motor Inverted -- True");
-      }
+      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, m_setpoint.position, 0.0);
     }
   }
 }
+
+// take out repetitive PID logs
+// Move PID loops to bottom of periodic
