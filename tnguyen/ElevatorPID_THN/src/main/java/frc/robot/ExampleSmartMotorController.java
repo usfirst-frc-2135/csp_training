@@ -15,18 +15,22 @@ import edu.wpi.first.wpilibj.DataLogManager;
  * A simplified stub class that simulates the API of a common "smart" motor controller.
  *
  * <p>
- * Has no actual functionality.
+ * Has no actual functionality. // TODO: Fix this comment. It's no longer valid.
  */
 public class ExampleSmartMotorController
 {
   /**
-   * declares PIDMode as an enum
-   * PIDMode used to determine controlmode
+   * declares PIDMode as an enum used to determine controlmode
    */
   public enum PIDMode
   {
     kPosition, kVelocity, kMovementWitchcraft
   }
+
+  private final static int      kSlotIndex              = 0;  // Talon SRX internal slot index for holding PID constnats
+  private final static int      kPIDIndex               = 0;  // Talon SRX internal PID index within a slot
+  private final static int      kCANTimeout             = 0;  // CTRE timeout that makes the call block and wait for a response
+  private final static int      kCTREVelocityConversion = 10; // CTRE reports velocities in counts/100 msec (not seconds)
 
   private WPI_TalonSRX          m_motor;
   private TalonSRXSimCollection m_motorSim;
@@ -44,12 +48,12 @@ public class ExampleSmartMotorController
    *          The port for the controller.
    */
   @SuppressWarnings("PMD.UnusedFormalParameter")
-  public ExampleSmartMotorController(int ports, double kEncoderCPR)
+  public ExampleSmartMotorController(int ports, double kEncoderCPR) // TODO: The parameter kEncoderCPR is not a constant--it is a variable parameter. Remove the "k"
   {
     m_motor = new WPI_TalonSRX(ports);
     m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
-    //encoder type in TalonSRX is quadrature encoder
-    m_motor.selectProfileSlot(0, 0);
+    //encoder type in TalonSRX is quadrature encoder // TODO: This comment is now redundant--the code says the same thing
+    m_motor.selectProfileSlot(kSlotIndex, kPIDIndex);
 
     setPID(m_kp, m_ki, m_kd);
 
@@ -89,10 +93,13 @@ public class ExampleSmartMotorController
     m_kp = kp;
     m_ki = ki;
     m_kd = kd;
-    m_motor.config_kP(0, kp);
-    m_motor.config_kI(0, ki);
-    m_motor.config_kD(0, kd);
+    m_motor.config_kP(kSlotIndex, kp);
+    m_motor.config_kI(kSlotIndex, ki);
+    m_motor.config_kD(kSlotIndex, kd);
     // TODO: It would be nice to log when the PID is changed, yes? yessssssss
+    // TODO: This is better, but why not put the actual settings in here? Like this:
+    // DataLogManager.log("PID Changed:  kP " + kp + " kI " + ki + " kd " + kd);
+    // TODO: And while it's OK to put smilies in your personal projects, they get quite old if everyone puts them in the competition robot software
     DataLogManager.log("PID Changed ;)");
   }
 
@@ -124,7 +131,7 @@ public class ExampleSmartMotorController
 
       case kVelocity :
         controlMode = ControlMode.Velocity;
-        setpoint /= 10;
+        setpoint /= kCTREVelocityConversion;
         break;
 
       case kMovementWitchcraft : // is not used in this code
@@ -132,8 +139,8 @@ public class ExampleSmartMotorController
         break;
     }
 
-    m_motor.set(controlMode, rotationsToCounts(setpoint));
     DataLogManager.log("ControlMode: " + controlMode + " Setpoint: " + setpoint);
+    m_motor.set(controlMode, rotationsToCounts(setpoint));
   }
 
   /**
@@ -152,7 +159,7 @@ public class ExampleSmartMotorController
    */
   public double getEncoderDistance( )
   {
-    return countsToRotations(m_motor.getSelectedSensorPosition(0));
+    return countsToRotations(m_motor.getSelectedSensorPosition(kPIDIndex));
   }
 
   /**
@@ -162,23 +169,25 @@ public class ExampleSmartMotorController
    */
   public double getEncoderRate( )
   {
-    return countsToRotations(m_motor.getSelectedSensorVelocity(0) * 10);
+    return countsToRotations(m_motor.getSelectedSensorVelocity(0) * kCTREVelocityConversion);
   }
 
   /** Resets the encoder to zero distance. */
   public void resetEncoder( )
   {
-    m_motor.setSelectedSensorPosition(0, 0, 0);
     DataLogManager.log("Encoder Reset :)");
+    m_motor.setSelectedSensorPosition(0, kSlotIndex, kCANTimeout);
   }
 
   /**
-   * used to set the constant speed of the motor, in percentOutput
+   * used to set the constant speed of the motor, in percentOutput // TODO: This is not a voltage!
+   * Change the variable name and comment.
    */
   public void set(double voltage)
-  { // set the speed of the motor using percent output
-    m_motor.set(ControlMode.PercentOutput, voltage);
+  { // set the speed of the motor using percent output // TODO: This comment is now redundant--delete it.
+   // TODO: Why not put the percent output right into the log message? See the example and comment above.
     DataLogManager.log("Encoder Voltage Changed");
+    m_motor.set(ControlMode.PercentOutput, voltage);
   }
 
   public double get( )
@@ -190,7 +199,7 @@ public class ExampleSmartMotorController
   public void setInverted(boolean isInverted)
   {
     m_motor.setInverted(isInverted);
-    DataLogManager.log("Motor Inverted Successfully");
+    DataLogManager.log("Motor Inverted Successfully"); // TODO: Put the new value right into the log message.
   }
 
   public boolean getInverted( )
@@ -205,8 +214,8 @@ public class ExampleSmartMotorController
 
   public void disable( )
   {
-    m_motor.set(ControlMode.Disabled, 0);
     DataLogManager.log("Motor disabled");
+    m_motor.set(ControlMode.Disabled, 0);
   }
 
   public double getVelocity( )
@@ -216,8 +225,8 @@ public class ExampleSmartMotorController
 
   public void stopMotor( )
   {
-    set(0.0);
     DataLogManager.log("Motor stopped");
+    set(0.0);
   }
 
   /**
