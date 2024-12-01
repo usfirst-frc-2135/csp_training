@@ -19,6 +19,15 @@ import edu.wpi.first.wpilibj.DataLogManager;
 
 public class ExampleSmartMotorController
 {
+  // Constants
+  // TODO: Note that we try to make all numbers use names (these are called literals) to make them describe the value
+  //    Use these literals to replace the "magic" numbers in your code--it should improve readability
+  private final static int      kSlotIndex              = 0;  // Talon SRX internal slot index for holding PID constnats
+  private final static int      kPIDIndex               = 0;  // Talon SRX internal PID index within a slot
+  private final static int      kCANTimeout             = 0;  // CTRE timeout that makes the call block and wait for a response
+  private final static int      kCTREVelocityConversion = 10; // CTRE reports velocities in counts/100 msec (not seconds)
+
+  // Class member objects
   private WPI_TalonSRX          m_motor;
   private double                m_kp;
   private double                m_ki;
@@ -66,6 +75,7 @@ public class ExampleSmartMotorController
     kPosition, kVelocity, kMovementWitchcraft
   }
 
+  // TODO: This block is no longer used, so delete it. Including the SuppressWarnings
   /**
    * Creates a new ExampleSmartMotorController.
    *
@@ -86,8 +96,8 @@ public class ExampleSmartMotorController
    */
 
   /*
-  *configure kp, ki, and kd based on values passed in Robot.java
-  */
+   * configure kp, ki, and kd based on values passed in Robot.java
+   */
   public void setPID(double kp, double ki, double kd)
   {
     m_kp = kp;
@@ -96,12 +106,12 @@ public class ExampleSmartMotorController
     m_motor.config_kP(0, kp);
     m_motor.config_kI(0, ki);
     m_motor.config_kD(0, kd);
-    DataLogManager.log("PID changed");
+    DataLogManager.log("PID changed");  // TODO: Why not put the kp, ki, and kd right into the log message?
   }
 
   /*
-  *return kp value
-  */
+   * return kp value
+   */
   public double getKp( )
   {
     return m_kp;
@@ -176,8 +186,8 @@ public class ExampleSmartMotorController
   /** Resets the encoder to zero distance. */
   public void resetEncoder( )
   {
-    m_motor.setSelectedSensorPosition(0, 0, 0);
     DataLogManager.log("Encoder reset");
+    m_motor.setSelectedSensorPosition(0, 0, 0);
   }
 
   /**
@@ -185,7 +195,7 @@ public class ExampleSmartMotorController
    */
   public void set(double percentOutput)
   { // set the speed of the motor using percent output
-    m_motor.set(ControlMode.PercentOutput, percentOutput);
+    m_motor.set(ControlMode.PercentOutput, percentOutput);  // TODO: Why not log a message with the new percent output value?
   }
 
   public double get( )
@@ -196,8 +206,8 @@ public class ExampleSmartMotorController
   /** Inverts motor direction */
   public void setInverted(boolean isInverted)
   {
+    DataLogManager.log("Motor inverted"); // TODO: This is where the actual new inverted value should be logged
     m_motor.setInverted(isInverted);
-    DataLogManager.log("Motor inverted");
   }
 
   public boolean getInverted( )
@@ -212,8 +222,8 @@ public class ExampleSmartMotorController
 
   public void disable( )
   {
-    m_motor.set(ControlMode.Disabled, 0);
     DataLogManager.log("Motor disabled");
+    m_motor.set(ControlMode.Disabled, 0);
   }
 
   public double getVelocity( )
@@ -228,7 +238,7 @@ public class ExampleSmartMotorController
 
   public void stopMotor( )
   {
-    set(0.0);
     DataLogManager.log("Motor stopped");
+    set(0.0);
   }
 }
