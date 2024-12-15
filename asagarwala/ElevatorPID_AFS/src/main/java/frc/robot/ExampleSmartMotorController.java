@@ -24,22 +24,25 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 
 // private TalonSRXSimCollection m_motorSim;
 
-public class ExampleSmartMotorController {
-  private static final double kEncoderCPR = 4096;
-  private WPI_TalonSRX m_motor;
+public class ExampleSmartMotorController
+{
+  private static final double   kEncoderCPR = 4096;
+  private WPI_TalonSRX          m_motor;
   private TalonSRXSimCollection m_motorSim;
 
-  private double m_kp = 0.0;
-  private double m_ki = 0.0;
-  private double m_kd = 0.0;
+  private double                m_kp        = 0.0;
+  private double                m_ki        = 0.0;
+  private double                m_kd        = 0.0;
 
-  WPI_TalonSRX m_TopMotor = new WPI_TalonSRX(5);
+  WPI_TalonSRX                  m_TopMotor  = new WPI_TalonSRX(5);
 
-  public TalonSRXSimCollection getMotorSimulation() {
+  public TalonSRXSimCollection getMotorSimulation( )
+  {
     return m_motorSim;
   }
 
-  private double countsToRotations(double encoderCounts) {
+  private double countsToRotations(double encoderCounts)
+  {
     return encoderCounts / kEncoderCPR;
 
   }
@@ -51,27 +54,29 @@ public class ExampleSmartMotorController {
 
   // }
 
-  private double rotationsToCounts(double rotation) {
+  private double rotationsToCounts(double rotation)
+  {
     return rotation * kEncoderCPR;
 
   }
 
-  public enum PIDMode {
-    kPosition,
-    kVelocity,
-    kMovementWitchcraft
+  public enum PIDMode
+  {
+    kPosition, kVelocity, kMovementWitchcraft
   }
 
-  private double setpoint;
+  private double  setpoint;
   private PIDMode mode;
 
-  public ExampleSmartMotorController(double kP, double kV, double kMV) {
+  public ExampleSmartMotorController(double kP, double kV, double kMV)
+  {
 
   }
 
-  public ExampleSmartMotorController(int port) {
+  public ExampleSmartMotorController(int port)
+  {
     m_TopMotor = new WPI_TalonSRX(port);
-    m_motorSim = m_motor.getSimCollection();
+    m_motorSim = m_motor.getSimCollection( );
     // TODO Auto-generated constructor stub
     m_TopMotor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
     // m_TopMotor.selectedProfileSlot(0, 0);
@@ -84,7 +89,8 @@ public class ExampleSmartMotorController {
    * Creates a new ExampleSmartMotorController.
    * 
    * @param rotation
-   * @param port     The port for the controller.
+   * @param port
+   *          The port for the controller.
    */
 
   /*
@@ -101,7 +107,8 @@ public class ExampleSmartMotorController {
   /**
    * Creates a new ExampleSmartMotorController.
    *
-   * @param port The port for the controller.
+   * @param port
+   *          The port for the controller.
    */
   @SuppressWarnings("PMD.UnusedFormalParameter")
 
@@ -110,11 +117,15 @@ public class ExampleSmartMotorController {
   /**
    * Example method for setting the PID gains of the smart controller.
    *
-   * @param kp The proportional gain.
-   * @param ki The integral gain.
-   * @param kd The derivative gain.
+   * @param kp
+   *          The proportional gain.
+   * @param ki
+   *          The integral gain.
+   * @param kd
+   *          The derivative gain.
    */
-  public void setPID(double kp, double ki, double kd) {
+  public void setPID(double kp, double ki, double kd)
+  {
     m_kp = kp;
     m_ki = ki;
     m_kd = kd;
@@ -123,7 +134,8 @@ public class ExampleSmartMotorController {
     m_TopMotor.config_kD(0, m_kd);
   }
 
-  public double getkP() {
+  public double getkP( )
+  {
     return m_kp;
 
   }
@@ -131,24 +143,29 @@ public class ExampleSmartMotorController {
   /**
    * Example method for setting the setpoint of the smart controller in PID mode.
    *
-   * @param mode           The mode of the PID controller.
-   * @param setpoint       The controller setpoint.
-   * @param arbFeedforward An arbitrary feedforward output (from -1 to 1).
+   * @param mode
+   *          The mode of the PID controller.
+   * @param setpoint
+   *          The controller setpoint.
+   * @param arbFeedforward
+   *          An arbitrary feedforward output (from -1 to 1).
    */
-  public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward) {
+  public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward)
+  {
     ControlMode controlMode;
-    switch (mode) {
-      default:
-      case kPosition:
+    switch (mode)
+    {
+      default :
+      case kPosition :
         controlMode = ControlMode.Position;
         break;
 
-      case kVelocity:
+      case kVelocity :
         controlMode = ControlMode.Velocity;
         setpoint /= 10;
         break;
 
-      case kMovementWitchcraft:
+      case kMovementWitchcraft :
         controlMode = ControlMode.MotionMagic;
         break;
     }
@@ -158,9 +175,11 @@ public class ExampleSmartMotorController {
   /**
    * Places this motor controller in follower mode.
    *
-   * @param leader The leader to follow.
+   * @param leader
+   *          The leader to follow.
    */
-  public void follow(ExampleSmartMotorController leader) {
+  public void follow(ExampleSmartMotorController leader)
+  {
 
   }
 
@@ -169,8 +188,9 @@ public class ExampleSmartMotorController {
    *
    * @return The current encoder distance.
    */
-  public double getEncoderDistance() {
-    return countsToRotations(m_TopMotor.getSelectedSensorPosition());
+  public double getEncoderDistance( )
+  {
+    return countsToRotations(m_TopMotor.getSelectedSensorPosition( ));
 
   }
 
@@ -179,36 +199,44 @@ public class ExampleSmartMotorController {
    *
    * @return The current encoder rate.
    */
-  public double getEncoderRate() {
+  public double getEncoderRate( )
+  {
     return countsToRotations(m_TopMotor.getSelectedSensorVelocity(0) * 10);
   }
 
   /** Resets the encoder to zero distance. */
-  public void resetEncoder() {
+  public void resetEncoder( )
+  {
     m_TopMotor.setSelectedSensorPosition(0, 0, 0);
   }
 
-  public void set(double voltage) {
+  public void set(double voltage)
+  {
     m_TopMotor.set(ControlMode.PercentOutput, voltage);
   }
 
-  public double get() {
-    return m_TopMotor.getMotorOutputPercent();
+  public double get( )
+  {
+    return m_TopMotor.getMotorOutputPercent( );
   }
 
-  public void setInverted(boolean isInverted) {
+  public void setInverted(boolean isInverted)
+  {
     m_TopMotor.setInverted(isInverted);
   }
 
-  public boolean getInverted() {
-    return m_TopMotor.getInverted();
+  public boolean getInverted( )
+  {
+    return m_TopMotor.getInverted( );
   }
 
-  public void disable() {
+  public void disable( )
+  {
     m_TopMotor.set(ControlMode.Disabled, 0);
   }
 
-  public void stopMotor() {
+  public void stopMotor( )
+  {
     set(0.0);
   }
 }

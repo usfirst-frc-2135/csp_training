@@ -20,80 +20,96 @@ import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 
-public class Robot extends TimedRobot {
-  private TrapezoidProfile m_trapezoidalProfile;
+public class Robot extends TimedRobot
+{
+  private TrapezoidProfile    m_trapezoidalProfile;
   private static final double kEncoderCPR = 4096;
 
-  private static double kDt = 0.02;
+  private static double       kDt         = 0.02;
 
   // private final static double kv = 1.0;
   // private final static double ka = 2.0;
-  public void TrapezoidalProfile() {
+  public void TrapezoidalProfile( )
+  {
     final double kv = 1.0;
     final double ka = 2.0;
     TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(kv, ka);
   }
 
-  private final XboxController m_controller = new XboxController(0);
-  private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(1, 1.0);
-  private final static ExampleSmartMotorController m_TopMotor = new ExampleSmartMotorController(5);
+  private final XboxController                     m_controller  = new XboxController(0);
+  private final SimpleMotorFeedforward             m_feedforward = new SimpleMotorFeedforward(1, 1.0);
+  private final static ExampleSmartMotorController m_TopMotor    = new ExampleSmartMotorController(5);
   // Note: These gains are fake, and will have to be tuned for your robot.
 
   // Create a motion profile with the given maximum velocity and maximum
   // acceleration constraints for the next setpoint.
-  private final TrapezoidProfile m_profile = new TrapezoidProfile(new TrapezoidProfile.Constraints(1.75, 0.75));
-  private TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
-  private TrapezoidProfile.State m_setpoint = new TrapezoidProfile.State();
-  public final static TalonSRXSimCollection m_TopMotorSim = m_TopMotor.getMotorSimulation();m_motorSim=m_motor.getSimCollection();
-  public final static elevSim m_elevSim = new elevSim(m_motorSim, kEncoderCPR);
+  private final TrapezoidProfile                   m_profile     =
+      new TrapezoidProfile(new TrapezoidProfile.Constraints(1.75, 0.75));
+  private TrapezoidProfile.State                   m_goal        = new TrapezoidProfile.State( );
+  private TrapezoidProfile.State                   m_setpoint    = new TrapezoidProfile.State( );
+  // public final static TalonSRXSimCollection m_TopMotorSim =
+  // m_TopMotor.getMotorSimulation();m_motorSim=m_motor.getSimCollection();
+  // public final static elevSim m_elevSim = new elevSim(m_motorSim, kEncoderCPR);
 
-  public class elevSim {
+  public class elevSim
+  {
 
-    public void periodic() {
+    public void periodic( )
+    {
 
     }
 
   }
 
   @Override
-  public void robotInit() {
-    m_TopMotor.resetEncoder();
-    m_elevSim.periodic();
+  public void robotInit( )
+  {
+    m_TopMotor.resetEncoder( );
+    // m_elevSim.periodic();
     // Note: These gains are fake, and will have to be tuned for your robot.
     m_TopMotor.setPID(0.125, 0, 0);
   }
 
   @Override
-  public void teleopPeriodic() {
+  public void teleopPeriodic( )
+  {
 
-    m_elevSim.periodic();
+    // m_elevSim.periodic();
 
-    SmartDashboard.putNumber("elevator_rotations", m_TopMotor.getEncoderDistance());
+    SmartDashboard.putNumber("elevator_rotations", m_TopMotor.getEncoderDistance( ));
     // SmartDashboard.putNumber("Goal", goal);
     // SmartDashboard.putNumber("Error", )
 
-    if (m_controller.getAButtonPressed()) {
+    if (m_controller.getAButtonPressed( ))
+    {
       m_TopMotor.set(0.3);
       DataLogManager.log("set a 0.3(percent output) constant speed");
     }
-    if (m_controller.getBButtonPressed()) {
+    if (m_controller.getBButtonPressed( ))
+    {
       m_TopMotor.set(-0.3);
       DataLogManager.log("set a -0.3(percent output) constant speed");
     }
-    if (m_controller.getRawButtonPressed(8)) {
-      if (m_TopMotor.getInverted()) {
+    if (m_controller.getRawButtonPressed(8))
+    {
+      if (m_TopMotor.getInverted( ))
+      {
         m_TopMotor.setInverted(false);
-      } else {
+      }
+      else
+      {
         m_TopMotor.setInverted(true);
       }
     }
     double goal;
-    if (m_controller.getXButtonPressed()) {
+    if (m_controller.getXButtonPressed( ))
+    {
       m_TopMotor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 1.0, 0.0);
       goal = 4096.0;
 
     }
-    if (m_controller.getYButtonPressed()) {
+    if (m_controller.getYButtonPressed( ))
+    {
       m_TopMotor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 0.0, 0.0);
       goal = 0.0;
 
