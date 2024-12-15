@@ -9,7 +9,6 @@ import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.ExampleSmartMotorController.PIDMode;
@@ -44,7 +43,6 @@ public class Robot extends TimedRobot
   private final TrapezoidProfile             m_profile        = new TrapezoidProfile(m_constraints);
   private TrapezoidProfile.State             m_setpoint       = new TrapezoidProfile.State( );
   private TrapezoidProfile.State             m_goal           = new TrapezoidProfile.State(kReverseGoal, 0.0);
-  private Timer                              m_timer          = new Timer( );
   private boolean                            m_pidEnabled     = false;
 
   // TODO: Not quite sure how inserting this elevator sim class even works here, but you've already created the m_elevSim object on the previous line,
@@ -117,7 +115,6 @@ public class Robot extends TimedRobot
     if (m_controller.getXButtonPressed( ))
     {
       DataLogManager.log("X button pressed");
-      m_timer.restart( );                                               // Start the profile timer
       m_goal = new TrapezoidProfile.State(kForwardGoal, 0);    // Change the goal
       m_pidEnabled = true;
       DataLogManager.log("New m_goal " + m_goal.position);
@@ -126,7 +123,6 @@ public class Robot extends TimedRobot
     if (m_controller.getYButtonPressed( ))
     {
       DataLogManager.log("Y button pressed");
-      m_timer.restart( );                                               // Start the profile timer
       m_goal = new TrapezoidProfile.State(kReverseGoal, 0);    // Change the goal
       m_pidEnabled = true;
       DataLogManager.log("New m_goal " + m_goal.position);
