@@ -8,6 +8,7 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+
 import edu.wpi.first.wpilibj.DataLogManager;
 
 /**
@@ -20,8 +21,6 @@ import edu.wpi.first.wpilibj.DataLogManager;
 public class ExampleSmartMotorController
 {
   // Constants
-  // TODO: Note that we try to make all numbers use names (these are called literals) to make them describe the value
-  //    Use these literals to replace the "magic" numbers in your code--it should improve readability
   private final static int      kSlotIndex              = 0;  // Talon SRX internal slot index for holding PID constnats
   private final static int      kPIDIndex               = 0;  // Talon SRX internal PID index within a slot
   private final static int      kCANTimeout             = 0;  // CTRE timeout that makes the call block and wait for a response
@@ -43,17 +42,18 @@ public class ExampleSmartMotorController
 
     m_EncoderCPR = kEncoderCPR;
 
-    //encoder type in TalonSRX is quadrature encoder
-    m_motor.selectProfileSlot(0, 0);
+    //Encoder type in TalonSRX is quadrature encoder
+    m_motor.selectProfileSlot(kSlotIndex, kPIDIndex);
     m_motorSim = m_motor.getSimCollection( );
     setPID(m_kp, m_ki, m_kd);
     DataLogManager.start( );
   }
 
   /**
-   * COUNTS TO ROTATIONS
-   * encoder reads values in counts, but human users input rotations for simplicity
-   * 4096 counts in one rotation, following methods converts counts to rotations, vice versa
+   * Converts the encoder value from rotations to counts.
+   *
+   * @param encoderRotations The value in rotations.
+   * @return The encoder value converted from rotations to counts.
    */
 
   private double rotationsToCounts(double rotation)
@@ -61,57 +61,51 @@ public class ExampleSmartMotorController
     return rotation * m_EncoderCPR;
   }
 
+  /**
+   * Converts the encoder value from counts to rotations.
+   *
+   * @param encoderCounts The value in counts.
+   * @return The encoder value converted from rotations to counts.
+   */
+
   private double countsToRotations(double encoderCounts)
   {
     return encoderCounts / m_EncoderCPR;
   }
 
   /**
-   * declares PIDMode as an enum
+   * Declares PIDMode as an enum
    * PIDMode used to determine controlmode
    */
+
   public enum PIDMode
   {
     kPosition, kVelocity, kMovementWitchcraft
   }
 
-  // TODO: This block is no longer used, so delete it. Including the SuppressWarnings
-  /**
-   * Creates a new ExampleSmartMotorController.
-   *
-   * @param port
-   *          The port for the controller.
-   */
-  @SuppressWarnings("PMD.UnusedFormalParameter")
-
   /**
    * Example method for setting the PID gains of the smart controller.
    *
-   * @param kp
-   *          The proportional gain.
-   * @param ki
-   *          The integral gain.
-   * @param kd
-   *          The derivative gain.
+   * @param kp The proportional gain
+   * @param ki The integral gain
+   * @param kd The derivative gain
    */
 
-  /*
-   * configure kp, ki, and kd based on values passed in Robot.java
-   */
   public void setPID(double kp, double ki, double kd)
   {
     m_kp = kp;
     m_ki = ki;
     m_kd = kd;
-    m_motor.config_kP(0, kp);
-    m_motor.config_kI(0, ki);
-    m_motor.config_kD(0, kd);
-    DataLogManager.log("PID changed");  // TODO: Why not put the kp, ki, and kd right into the log message?
+    m_motor.config_kP(kSlotIndex, kp);
+    m_motor.config_kI(kSlotIndex, ki);
+    m_motor.config_kD(kSlotIndex, kd);
+    DataLogManager.log("PID changed. kp: " + kp + ", ki: " + ki + ", kd: " + kd);
   }
 
   /*
-   * return kp value
+   * Return kp value
    */
+
   public double getKp( )
   {
     return m_kp;
@@ -128,7 +122,6 @@ public class ExampleSmartMotorController
    *          An arbitrary feedforward output (from -1 to 1).
    */
 
-  //
   public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward)
   {
     ControlMode controlMode;
@@ -142,10 +135,10 @@ public class ExampleSmartMotorController
 
       case kVelocity :
         controlMode = ControlMode.Velocity;
-        setpoint /= 10;
+        setpoint /= kCTREVelocityConversion;
         break;
 
-      case kMovementWitchcraft : // is not used in this code
+      case kMovementWitchcraft : // not used in this code
         controlMode = ControlMode.MotionMagic;
         break;
     }
@@ -160,6 +153,7 @@ public class ExampleSmartMotorController
    * @param leader
    *          The leader to follow.
    */
+
   public void follow(ExampleSmartMotorController leader)
   {}
 
@@ -168,6 +162,7 @@ public class ExampleSmartMotorController
    *
    * @return The current encoder distance.
    */
+
   public double getEncoderDistance( )
   {
     return countsToRotations(m_motor.getSelectedSensorPosition(0));
@@ -178,25 +173,33 @@ public class ExampleSmartMotorController
    *
    * @return The current encoder rate.
    */
+
   public double getEncoderRate( )
   {
-    return countsToRotations(m_motor.getSelectedSensorVelocity(0) * 10);
+    return countsToRotations(m_motor.getSelectedSensorVelocity(kPIDIndex) * kCTREVelocityConversion);
   }
 
   /** Resets the encoder to zero distance. */
   public void resetEncoder( )
   {
     DataLogManager.log("Encoder reset");
-    m_motor.setSelectedSensorPosition(0, 0, 0);
+    m_motor.setSelectedSensorPosition(0, kPIDIndex, kCANTimeout);
   }
 
   /**
-   * used to set the constant speed of the motor, in percentOutput
+   * Used to set the constant speed of the motor, in percentOutput
    */
+
   public void set(double percentOutput)
-  { // set the speed of the motor using percent output
-    m_motor.set(ControlMode.PercentOutput, percentOutput);  // TODO: Why not log a message with the new percent output value?
+  {
+    m_motor.set(ControlMode.PercentOutput, percentOutput);
+    DataLogManager.log("Percent output: " + percentOutput);
   }
+
+  /**
+   * Returns the constant speed of the motor in percentOutput
+   * @return MotorOutputPercent
+   */
 
   public double get( )
   {
@@ -206,25 +209,44 @@ public class ExampleSmartMotorController
   /** Inverts motor direction */
   public void setInverted(boolean isInverted)
   {
-    DataLogManager.log("Motor inverted"); // TODO: This is where the actual new inverted value should be logged
+    DataLogManager.log("Motor inverted: " + ControlMode.PercentOutput);
     m_motor.setInverted(isInverted);
   }
+
+  /**
+   * Return to get whether motor is inverted or not
+   * @return True if motor is inverted, false if it is not
+   */
 
   public boolean getInverted( )
   {
     return m_motor.getInverted( );
   }
 
+  /**
+   * Returns difference between desired target value and motor's actual value
+   * @return ClosedLoopError
+   */
+
   public double getClosedLoopError( )
   {
     return (m_motor.getClosedLoopError( ));
   }
+
+  /**
+   * Disables motor
+   */
 
   public void disable( )
   {
     DataLogManager.log("Motor disabled");
     m_motor.set(ControlMode.Disabled, 0);
   }
+
+  /**
+   * Returns velocity as measured by encoder in rotations
+   * @return Velocity in rotations
+   */
 
   public double getVelocity( )
   {
@@ -235,6 +257,10 @@ public class ExampleSmartMotorController
   {
     return m_motorSim;
   }
+
+  /**
+   * Stops motor by setting percentOutput to 0
+   */
 
   public void stopMotor( )
   {
