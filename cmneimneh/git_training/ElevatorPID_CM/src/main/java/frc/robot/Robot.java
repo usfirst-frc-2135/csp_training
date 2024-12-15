@@ -15,129 +15,102 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Robot extends TimedRobot
 {
-  public static double                      kDt           = 0.02;
-  private double                            goal;
-  private final static double               kEncoderCPR   = 4096;
+  // Constants
+  private final static double               kDt               = 0.02;  // Loop delay time for simulation
+  private final static int                  kGamepadPort      = 0;     // XBox controller USB port
+  private final static int                  kMotorCANId       = 5;     // Motor CAN ID assignment
+  private final static double               kP                = 0.38;  // PID - proportional value
+  private final static double               kI                = 0.0;   // PID - integral value
+  private final static double               kD                = 0.0;   // PID - derivative value
+  private final static double               kEncoderCPR       = 4096;  // Encoder CPR for CTRE Mag encoder connected to Talon SRX
+  private final static double               kConstantOutput   = 0.3;   // Constant percent output value
+  private final static double               kMaxVelocity      = 1.0;   // Trapezoidal profile max velocity
+  private final static double               kMaxAcceleration  = 1.0;   // Trapezoidal profile max acceleration
+  private final static double               kForwardGoal      = 3.0;   // Trapezoidal move - forward goal rotations
+  private final static double               kReverseGoal      = 0.0;   // Trapezoidal move - reverse goal rotations
+  private final static double               kMaxPositionError = 0.06;  // Maximum allowed error between actual position and goal
 
-  private final XboxController              m_controller  = new XboxController(0);
-  private final ExampleSmartMotorController m_motor       = new ExampleSmartMotorController(5, kEncoderCPR);
-  private final SimpleMotorFeedforward      m_feedforward = new SimpleMotorFeedforward(1, 1.5);
-  private final TrapezoidProfile            m_profile     = new TrapezoidProfile(new TrapezoidProfile.Constraints(1.0, 2.0));
-  private TrapezoidProfile.State            m_goal        = new TrapezoidProfile.State( );
-  private TrapezoidProfile.State            m_setpoint    = new TrapezoidProfile.State( );
+  // Class member objects
+  private final XboxController              m_controller      = new XboxController(kGamepadPort);
+  private final ExampleSmartMotorController m_motor           = new ExampleSmartMotorController(kMotorCANId, kEncoderCPR);
+  private final SimpleMotorFeedforward      m_feedforward     = new SimpleMotorFeedforward(1, 1.5);
+  private final TrapezoidProfile            m_profile         =
+      new TrapezoidProfile(new TrapezoidProfile.Constraints(kMaxVelocity, kMaxAcceleration));
+  private TrapezoidProfile.State            m_goal            = new TrapezoidProfile.State( );
+  private TrapezoidProfile.State            m_setpoint        = new TrapezoidProfile.State( );
 
-  private final TalonSRXSimCollection       m_motorSim    = m_motor.getMotorSimulation( );
-  private final ElevSim                     m_elevSim     = new ElevSim(m_motorSim, kEncoderCPR);
+  private final TalonSRXSimCollection       m_motorSim        = m_motor.getMotorSimulation( );
+  private final ElevSim                     m_elevSim         = new ElevSim(m_motorSim, kEncoderCPR);
+  private boolean                           m_pidEnabled      = false;
 
   @Override
   public void robotInit( )
   {
-    // Note: These gains are fake, and will have to be tuned for your robot.
-    m_motor.setPID(0.27, 0.0, 0.0);
-    m_motor.resetEncoder( );
     DataLogManager.start( );
+    m_motor.setPID(kP, kI, kD);
+    m_motor.resetEncoder( );
+    m_elevSim.periodic( );
+    SmartDashboard.putNumber("Kp", m_motor.getKp( ));
   }
 
   @Override
   public void teleopPeriodic( )
   {
-    /*
-     * if (m_joystick.getRawButtonPressed(2)) {
-     * m_goal = new TrapezoidProfile.State(5, 0);
-     * } else if (m_joystick.getRawButtonPressed(3)) {
-     * m_goal = new TrapezoidProfile.State();
-     * }
-     * 
-     * // Retrieve the profiled setpoint for the next timestep. This setpoint moves
-     * // toward the goal while obeying the constraints.
-     * m_setpoint = m_profile.calculate(kDt, m_setpoint, m_goal);
-     * 
-     * // Send setpoint to offboard controller PID
-     * m_motor.setSetpoint(
-     * ExampleSmartMotorController.PIDMode.kPosition,
-     * m_setpoint.position,
-     * m_feedforward.calculate(m_setpoint.velocity) / 12.0);
-     */
-
-    // SmartDashboard.putNumber("Elevator Rotations", m_motor.getEncoderDistance());
-    // SmartDashboard.putNumber("Target", goal);
-    // SmartDashboard.putNumber("Error", m_motor.getClosedLoopError());
-
     SmartDashboard.putNumber("Elevator Rotations", m_motor.getEncoderDistance( ));
-    SmartDashboard.putNumber("Target", goal);
+    SmartDashboard.putNumber("Target", m_goal.position);
     SmartDashboard.putNumber("Error", m_motor.getClosedLoopError( ));
-    SmartDashboard.putNumber("Kp", m_motor.getKp( ));
     SmartDashboard.putNumber("Velocity", m_motor.getVelocity( ));
 
     m_elevSim.periodic( );
 
-    if (m_controller.getAButtonPressed( ))
-    { // if A button pressed, set voltage of 0.3
-      m_motor.set(0.3);
-      DataLogManager.log("A Button Pressed -- Voltage PercentOutput: 0.3");
-    }
-
-    if (m_controller.getBButtonPressed( ))
-    { // if B button pressed, set voltage of -0.3
-      m_motor.set(-0.3);
-      DataLogManager.log("B Button Pressed -- Voltage PercentOutput: -0.3");
-    }
-
-    if (m_controller.getXButtonPressed( ))
-    { // if X button pressed, set PID at setpoint of 1.0
-     // m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 1.0, 0); 
-     // DataLogManager.log("X Button Pressed -- PID Setpoint: 1.0");
-     // goal = 4096.0;
-      m_goal = new TrapezoidProfile.State(5, 0); // test this value (position value :)
-      DataLogManager.log("X Button Pressed -- Trapezoid Profile Setpoint: 1.0");
-    }
-
-    if (m_controller.getYButtonPressed( ))
-    { // if Y button pressed, set PID at setpoint of 0.0
-     // m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 0.0, 0);
-     // DataLogManager.log("Y Button Pressed -- PID Setpoint: 0.0");
-     // goal = 0.0;
-      m_goal = new TrapezoidProfile.State(0, 0); // test this value (position value :)
-      DataLogManager.log("Y Button Pressed -- Trapezoid Profile Setpoint: 0.0");
-    }
-
-    // TODO: 
-    //        We want this block to run ONLY when given a goal above (when X or Y is pressed), but we want it to
-    //        run for both cases. Arbitrary feedforward will be 0.0 for you (we can talk about when to use
-    //        it in person). Do the following:
-    //
-    //        1) Make a flag (boolean) that is set in the X and Y button cases above to start a movement
-    //        2) Use the flag to enable this code block with the "if" (replace the "true")
-    //        3) In the block below, when the movement is finished, be sure to clear that flag
-    //
-    //        Put useful info to the dashboard to debug (logging is good for state changes, not spamming messages
-    //        to the console).
-    //
-    if (true)
-    {
-      m_setpoint = m_profile.calculate(kDt, m_setpoint, m_goal);
-      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, m_setpoint.position, 0.0); // why divide by 12?
-    }
-
     if (m_controller.getRightBumperPressed( ))
-    { // if Right Bumper pressed, stop Motor
+    {
+      m_pidEnabled = false;
+      DataLogManager.log("Right Bumper Pressed -- Stop motor (PID disabled)");
       m_motor.stopMotor( );
-      DataLogManager.log("Right Bumper Pressed -- Motor Stopped");
     }
 
     if (m_controller.getRawButtonPressed(8))
-    { // if menu button, invert motor direction
-      DataLogManager.log("Menu Button Pressed"); // controller is not reading the button being pressed?
-      if (m_motor.getInverted( ))
-      {
-        m_motor.setInverted(false);
-        DataLogManager.log("Motor Inverted -- False");
-      }
-      else
-      {
-        m_motor.setInverted(true);
-        DataLogManager.log("Motor Inverted -- True");
-      }
+    {
+      DataLogManager.log("Menu Button Pressed - Invert motor (PID disabled)");
+      m_pidEnabled = false;
+
+      m_motor.setInverted(!m_motor.getInverted( ));
+    }
+
+    if (m_controller.getAButtonPressed( ))
+    {
+      DataLogManager.log("A Button Pressed -- Set motor to constant forward speed (PID disabled)");
+      m_pidEnabled = false;
+      m_motor.set(kConstantOutput);
+    }
+
+    if (m_controller.getBButtonPressed( ))
+    {
+      DataLogManager.log("A Button Pressed -- Set motor to constant reverse speed (PID disabled)");
+      m_pidEnabled = false;
+      m_motor.set(-kConstantOutput);
+    }
+
+    if (m_controller.getXButtonPressed( ))
+    {
+      DataLogManager.log("X Button Pressed -- Trapezoid Profile Forward Goal (PID enabled)");
+      m_pidEnabled = true;
+      DataLogManager.log("PID Enabled");
+      m_goal = new TrapezoidProfile.State(kForwardGoal, 0);
+    }
+
+    if (m_controller.getYButtonPressed( ))
+    {
+      DataLogManager.log("Y Button Pressed -- Trapezoid Profile Reverse Goal (PID enabled)");
+      m_pidEnabled = true;
+      m_goal = new TrapezoidProfile.State(kReverseGoal, 0);
+    }
+
+    if (m_pidEnabled && (m_goal.position - m_setpoint.position > kMaxPositionError))
+    {
+      m_setpoint = m_profile.calculate(kDt, m_setpoint, m_goal);
+      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, m_setpoint.position, 0.0);
     }
   }
 }

@@ -4,114 +4,219 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
 
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.DataLogManager;
+import frc.robot.ExampleSmartMotorController.PIDMode;
 
 public class Robot extends TimedRobot
 {
-  private final static double                kDt           = 0.020;
+  // Constants
+  // TODO: Note that we try to make all numbers use names (these are called literals) to make them describe the value
+  //    Use these literals to replace the "magic" numbers in your code--it should improve readability
+  private final static double                kDt              = 0.020; // Loop delay time for simulation
+  private final static int                   kGamepadPort     = 0;     // XBox m_controller USB port
+  private final static int                   kMotorCANId      = 5;     // Motor CAN ID assignment
+  private final static double                kP               = 0.38;  // PID - proportional value
+  private final static double                kI               = 0.0;   // PID - integral value
+  private final static double                kD               = 0.0;   // PID - derivative value
+  private final static double                kEncoderCPR      = 4096;  // Encoder CPR for CTRE Mag encoder connected to Talon SRX
+  private final static double                kConstantOutput  = 0.3;   // Constant percent output value
+  private final static double                kMaxVelocity     = 1.0;   // Trapezoidal profile max velocity
+  private final static double                kMaxAcceleration = 2.0;   // Trapezoidal profile max acceleration
+  private final static double                kForwardGoal     = 3.0;   // Trapezoidal move - forward goal rotations
+  private final static double                kReverseGoal     = 0.0;   // Trapezoidal move - reverse goal rotations
+  private final static double                kGoalTolerance   = 0.01;   // Tolerance around the target goal allowed to consider move is finished (positive OR negative)
 
-  // TODO:  these define a trapezoidal profile with a max velocity of 8.0 rps and acceleration of 16 rps/sec
-  //      further down, m_profile is created with a much slower profile of 1.75 rps and 0.75 rps/sec
-  //      and then after that m_constraints is defined with the faster setings
-  //      these are not used YET, but be aware that you have multiple (confilicting) profiles defined
-  private final static double                kv            = 8.0; // Max velocity - RPS
-  private final static double                ka            = 16.0;
-  private double                             goal;
-  //private final static TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(kv, ka);
+  // Member objects
+  private final XboxController               m_controller     = new XboxController(kGamepadPort);
+  private final ExampleSmartMotorController  m_motor          = new ExampleSmartMotorController(kMotorCANId, kEncoderCPR); // TODO: This was missing the second parameter!
+  private final TalonSRXSimCollection        m_motorSim       = m_motor.getMotorSimulation( );
+  private final ElevSim                      m_elevSim        = new ElevSim(m_motorSim, kEncoderCPR);
 
-  private final XboxController               controller    = new XboxController(0);
-  private final ExampleSmartMotorController  m_motor       = new ExampleSmartMotorController(5);
+  // Create a motion profile with the given maximum velocity and maximum acceleration constraints for the next setpoint.
+  private final TrapezoidProfile.Constraints m_constraints    = new TrapezoidProfile.Constraints(kMaxVelocity, kMaxAcceleration);
+  private final TrapezoidProfile             m_profile        = new TrapezoidProfile(m_constraints);
+  private TrapezoidProfile.State             m_setpoint       = new TrapezoidProfile.State( );
+  private TrapezoidProfile.State             m_goal           = new TrapezoidProfile.State(kReverseGoal, 0.0);
+  private boolean                            m_pidEnabled     = false;
 
-  // Note: These gains are fake, and will have to be tuned for your robot.
-  private final SimpleMotorFeedforward       m_feedforward = new SimpleMotorFeedforward(1, 1.5);
+  // TODO: Not quite sure how inserting this elevator sim class even works here, but you've already created the m_elevSim object on the previous line,
+  //        so we can just use it's methods without having all this extraneous sfuff in here.
+  // public class ElevSim
+  // {
+  // ....
 
-  // Create a motion profile with the given maximum velocity and maximum
-  // acceleration constraints for the next setpoint.
-  private final TrapezoidProfile             m_profile     = new TrapezoidProfile(new TrapezoidProfile.Constraints(1.75, 0.75));
-
-  private final TrapezoidProfile.Constraints m_Constraints = new TrapezoidProfile.Constraints(kv, ka);
-
-  private TrapezoidProfile.State             m_goal        = new TrapezoidProfile.State( );   // The desired end state of the movement
-  private TrapezoidProfile.State             m_setpoint    = new TrapezoidProfile.State( );   // The currently active state while making the movement
-
-  @Override
   public void robotInit( )
   {
-    // Note: These gains are fake, and will have to be tuned for your robot.
-    m_motor.setPID(0.125, 0.0, 0.0);
-    DataLogManager.start( );
+    DataLogManager.start( );  // TODO: Put this first when robot starts so all the following methods can use the logger.
 
-    DataLogManager.log("Initial encoder position: " + m_motor.getEncoderDistance( ));
+    // m_profile = new TrapezoidProfile(constraints); // TODO: Delete this, it's already done during initialization of class member variables above
+
+    m_motor.setPID(kP, kI, kD);
+    m_motor.resetEncoder( );
+    m_elevSim.reset( );
+
+    SmartDashboard.putNumber("Kp", m_motor.getKp( ));   // TODO: This can never be changed once the robot is running--I moved it into robotInit() (could be deleted!)
   }
 
   @Override
+  public void disabledInit( )
+  {
+    m_pidEnabled = false;
+    m_motor.stopMotor( );
+  }
+
+  @Override
+  public void robotPeriodic( )
+  {
+    m_elevSim.periodic( );
+  }
+
+  @Override // TODO: Somehow this was removed and teleopPeriodic would never run!
   public void teleopPeriodic( )
   {
-    SmartDashboard.putNumber("Goal", goal);
-    SmartDashboard.putNumber("Kp", m_motor.getKp( ));   // TODO: since the motor kp cannot be changed while running, this doesn't need to be in the periodic loop (put in robotInit after setPID)
+    SmartDashboard.putNumber("Goal", m_goal.position);
     SmartDashboard.putNumber("Error", m_motor.getClosedLoopError( ));
+    SmartDashboard.putNumber("elevator rotations", m_motor.getEncoderRotations( ));
 
-    SmartDashboard.putNumber("elevator rotations", m_motor.getEncoderDistance( ));
-    if (controller.getAButtonPressed( ))
+    if (m_controller.getAButtonPressed( ))
     {
-      m_motor.set(0.3);
-      DataLogManager.log("A button pressed"); // TODO: These log messages help greatly during debugging, why not do ALL the buttons while learning (X, Y, 8 are omitted)
+      DataLogManager.log("A button pressed"); // TODO: Put all the button log messages BEFORE the action, so they are chronological in the printed log
+      m_pidEnabled = false;
+      m_motor.setOutput(kConstantOutput);
     }
-    else if (controller.getBButtonPressed( ))
+
+    if (m_controller.getBButtonPressed( ))
     {
-      m_motor.set(-0.3);
       DataLogManager.log("B button pressed");
+      m_pidEnabled = false;
+      m_motor.setOutput(-kConstantOutput);
     }
 
-    if (controller.getRawButtonPressed(8))  // TODO: I'll bet there's a named get<something>Pressed that is a better call than this
+    if (m_controller.getStartButtonPressed( ))  // TODO: Button 8 is the START button. 
     {
-      if (m_motor.getInverted( ))
-      {
-        m_motor.setInverted(false);
-        DataLogManager.log("Motor Inverted = false");
-      }
-      else
-      {
-        m_motor.setInverted(true);
-        DataLogManager.log("Motor Inverted = true");
-      }
+      DataLogManager.log("Start button pressed");
+      m_pidEnabled = false;
+      m_motor.setInverted(!m_motor.getInverted( ));
     }
 
-    if (controller.getXButtonPressed( ))
+    if (m_controller.getRightBumperPressed( ))
     {
-      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 1.0, 0.0);
-      goal = 4096.0;  // TODO: the goal (endpoint) will be in rotations (not counts), so it should be 1.0 and could be passed into the setSetpoint method above FOR THE PID MOVE
-    }
-
-    if (controller.getYButtonPressed( ))
-    {
-      m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 0.0, 0.0);
-      goal = 0.0; // TODO: the goal (endpoint) will be in rotations (not counts), so it should be 1.0 and could be passed into the setSetpoint method above FOR THE PID MOVE
-    }
-
-    if (controller.getRightBumperPressed( ))
-    {
+      DataLogManager.log("Right bumper pressed");
+      m_pidEnabled = false;
       m_motor.stopMotor( );
-      DataLogManager.log("Right bumper pressed, motor stopped");
     }
 
-    //var profile = new TrapezoidProfile(m_Constraints, m_goal, m_setpoint);
-    //var profile = new TrapezoidProfile(m_Constraints, m_goal, m_setpoint);
+    if (m_controller.getXButtonPressed( ))
+    {
+      DataLogManager.log("X button pressed");
+      m_goal = new TrapezoidProfile.State(kForwardGoal, 0);    // Change the goal
+      m_pidEnabled = true;
+      DataLogManager.log("New m_goal " + m_goal.position);
+    }
 
-    // Retrieve the profiled setpoint for the next timestep. This setpoint moves
-    // toward the goal while obeying the constraints.
-    //m_setpoint = m_profile.calculate(kDt);
+    if (m_controller.getYButtonPressed( ))
+    {
+      DataLogManager.log("Y button pressed");
+      m_goal = new TrapezoidProfile.State(kReverseGoal, 0);    // Change the goal
+      m_pidEnabled = true;
+      DataLogManager.log("New m_goal " + m_goal.position);
+    }
 
-    // Send setpoint to offboard controller PID
-    // m_motor.setSetpoint(
-    //     ExampleSmartMotorController.PIDMode.kPosition,
-    //     m_setpoint.position,
-    //     m_feedforward.calculate(m_setpoint.velocity) / 12.0);
+    SmartDashboard.putBoolean("pidEnabled", m_pidEnabled);
+
+    if (m_pidEnabled)
+    {
+      m_setpoint = m_profile.calculate(kDt, m_setpoint, m_goal);  // Get a new setpoint by passing in the current setpoint and goal
+      m_motor.setSetpoint(PIDMode.kPosition, m_setpoint.position, 0.0); // Adjust feedforward TODO: Arbitrary feedforward is ZERO for this
+
+      if ((Math.abs(m_goal.position - m_setpoint.position)) < kGoalTolerance)
+      {
+        m_pidEnabled = false;
+      }
+    }
+
   }
+
+  // TODO: Providing "getter" functions at this level adds no useful value. No one is calling these--nor should they. 
+  //        All data should be passed through the method calls--not using these. I recommend removing them.
+  //   public static double getKdt( )
+  //   {
+  //     return kDt;
+  //   }
+
+  //   public static double getKv( )
+  //   {
+  //     return kv;
+  //   }
+
+  //   public static double getKa( )
+  //   {
+  //     return ka;
+  //   }
+
+  //   public double getGoal( )
+  //   {
+  //     return goal;
+  //   }
+
+  //   public void setGoal(double goal)
+  //   {
+  //     this.goal = goal;
+  //   }
+
+  //   public static double getKencodercpr( )
+  //   {
+  //     return kEncoderCPR;
+  //   }
+
+  //   public XboxController getController( )
+  //   {
+  //     return m_controller;
+  //   }
+
+  //   public static ExampleSmartMotorController getmMotor( )
+  //   {
+  //     return m_motor;
+  //   }
+
+  //   public SimpleMotorFeedforward getM_feedforward( )
+  //   {
+  //     return m_feedforward;
+  //   }
+
+  //   public TrapezoidProfile getM_profile( )
+  //   {
+  //     return m_profile;
+  //   }
+
+  //   public TrapezoidProfile.Constraints getM_Constraints( )
+  //   {
+  //     return m_Constraints;
+  //   }
+
+  //   public TrapezoidProfile.State getM_setpoint( )
+  //   {
+  //     return m_setpoint;
+  //   }
+
+  //   public void setM_setpoint(TrapezoidProfile.State m_setpoint)
+  //   {
+  //     this.m_setpoint = m_setpoint;
+  //   }
+
+  //   public TalonSRXSimCollection getM_motorSim( )
+  //   {
+  //     return m_motorSim;
+  //   }
+
+  //   public ElevSim getM_elevSim( )
+  //   {
+  //     return m_elevSim;
+  //   }
 }

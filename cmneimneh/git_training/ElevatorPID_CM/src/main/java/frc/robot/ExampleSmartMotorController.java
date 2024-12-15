@@ -8,6 +8,7 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+
 import edu.wpi.first.wpilibj.DataLogManager;
 
 /**
@@ -19,75 +20,91 @@ import edu.wpi.first.wpilibj.DataLogManager;
 
 public class ExampleSmartMotorController
 {
-  private final WPI_TalonSRX    m_motor    = new WPI_TalonSRX(5);
+  // Constants
+  private final static int      kSlotIndex              = 0;  // Talon SRX internal slot index for holding PID constnats
+  private final static int      kPIDIndex               = 0;  // Talon SRX internal PID index within a slot
+  private final static int      kCANTimeout             = 0;  // CTRE timeout that makes the call block and wait for a response
+  private final static int      kCTREVelocityConversion = 10; // CTRE reports velocities in counts/100 msec (not seconds)
+
+  // Class member objects
+  private WPI_TalonSRX          m_motor;
   private double                m_kp;
   private double                m_ki;
   private double                m_kd;
-  private static double         m_kEncoderCPR;
+  private double                m_EncoderCPR;
 
-  private TalonSRXSimCollection m_motorSim = new TalonSRXSimCollection(m_motor);
+  private TalonSRXSimCollection m_motorSim;
+
+  public ExampleSmartMotorController(int ports, double kEncoderCPR)
+  {
+    m_motor = new WPI_TalonSRX(ports);
+    m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
+
+    m_EncoderCPR = kEncoderCPR;
+
+    //Encoder type in TalonSRX is quadrature encoder
+    m_motor.selectProfileSlot(kSlotIndex, kPIDIndex);
+    m_motorSim = m_motor.getSimCollection( );
+    setPID(m_kp, m_ki, m_kd);
+    DataLogManager.start( );
+  }
 
   /**
-   * COUNTS TO ROTATIONS
-   * encoder reads values in counts, but human users input rotations for simplicity
-   * 4096 counts in one rotation, following methods converts counts to rotations, vice versa
+   * Converts the encoder value from rotations to counts.
+   *
+   * @param encoderRotations The value in rotations.
+   * @return The encoder value converted from rotations to counts.
    */
 
   private double rotationsToCounts(double rotation)
   {
-    return rotation * m_kEncoderCPR;
-  }
-
-  private double countsToRotations(double encoderCounts)
-  {
-    return encoderCounts / m_kEncoderCPR;
+    return rotation * m_EncoderCPR;
   }
 
   /**
-   * declares PIDMode as an enum
+   * Converts the encoder value from counts to rotations.
+   *
+   * @param encoderCounts The value in counts.
+   * @return The encoder value converted from rotations to counts.
+   */
+
+  private double countsToRotations(double encoderCounts)
+  {
+    return encoderCounts / m_EncoderCPR;
+  }
+
+  /**
+   * Declares PIDMode as an enum
    * PIDMode used to determine controlmode
    */
+
   public enum PIDMode
   {
     kPosition, kVelocity, kMovementWitchcraft
   }
 
   /**
-   * Creates a new ExampleSmartMotorController.
-   *
-   * @param port
-   *          The port for the controller.
-   */
-  @SuppressWarnings("PMD.UnusedFormalParameter")
-  public ExampleSmartMotorController(int port, double kEncoderCPR)
-  {
-    m_kEncoderCPR = kEncoderCPR;
-    m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
-    //encoder type in TalonSRX is quadrature encoder
-    m_motor.selectProfileSlot(0, 0);
-
-    setPID(m_kp, m_ki, m_kd);
-  }
-
-  /**
    * Example method for setting the PID gains of the smart controller.
    *
-   * @param kp
-   *          The proportional gain.
-   * @param ki
-   *          The integral gain.
-   * @param kd
-   *          The derivative gain.
+   * @param kp The proportional gain
+   * @param ki The integral gain
+   * @param kd The derivative gain
    */
+
   public void setPID(double kp, double ki, double kd)
   {
     m_kp = kp;
     m_ki = ki;
     m_kd = kd;
-    m_motor.config_kP(0, kp);
-    m_motor.config_kI(0, ki);
-    m_motor.config_kD(0, kd);
+    m_motor.config_kP(kSlotIndex, kp);
+    m_motor.config_kI(kSlotIndex, ki);
+    m_motor.config_kD(kSlotIndex, kd);
+    DataLogManager.log("PID changed. kp: " + kp + ", ki: " + ki + ", kd: " + kd);
   }
+
+  /*
+   * Return kp value
+   */
 
   public double getKp( )
   {
@@ -104,6 +121,7 @@ public class ExampleSmartMotorController
    * @param arbFeedforward
    *          An arbitrary feedforward output (from -1 to 1).
    */
+
   public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward)
   {
     ControlMode controlMode;
@@ -117,17 +135,16 @@ public class ExampleSmartMotorController
 
       case kVelocity :
         controlMode = ControlMode.Velocity;
-        setpoint /= 10;
+        setpoint /= kCTREVelocityConversion;
         break;
 
-      case kMovementWitchcraft : // is not used in this code
+      case kMovementWitchcraft : // not used in this code
         controlMode = ControlMode.MotionMagic;
         break;
     }
 
     m_motor.set(controlMode, rotationsToCounts(setpoint));
-    DataLogManager.log("ControlMode: " + controlMode);
-    DataLogManager.log("Setpoint: " + rotationsToCounts(setpoint));
+    DataLogManager.log("ControlMode: " + controlMode + " Setpoint: " + setpoint);
   }
 
   /**
@@ -136,6 +153,7 @@ public class ExampleSmartMotorController
    * @param leader
    *          The leader to follow.
    */
+
   public void follow(ExampleSmartMotorController leader)
   {}
 
@@ -144,6 +162,7 @@ public class ExampleSmartMotorController
    *
    * @return The current encoder distance.
    */
+
   public double getEncoderDistance( )
   {
     return countsToRotations(m_motor.getSelectedSensorPosition(0));
@@ -154,24 +173,33 @@ public class ExampleSmartMotorController
    *
    * @return The current encoder rate.
    */
+
   public double getEncoderRate( )
   {
-    return countsToRotations(m_motor.getSelectedSensorVelocity(0) * 10);
+    return countsToRotations(m_motor.getSelectedSensorVelocity(kPIDIndex) * kCTREVelocityConversion);
   }
 
   /** Resets the encoder to zero distance. */
   public void resetEncoder( )
   {
-    m_motor.setSelectedSensorPosition(0, 0, 0);
+    DataLogManager.log("Encoder reset");
+    m_motor.setSelectedSensorPosition(0, kPIDIndex, kCANTimeout);
   }
 
   /**
-   * used to set the constant speed of the motor, in percentOutput
+   * Used to set the constant speed of the motor, in percentOutput
    */
-  public void set(double voltage)
-  { // set the speed of the motor using percent output
-    m_motor.set(ControlMode.PercentOutput, voltage);
+
+  public void set(double percentOutput)
+  {
+    m_motor.set(ControlMode.PercentOutput, percentOutput);
+    DataLogManager.log("Percent output: " + percentOutput);
   }
+
+  /**
+   * Returns the constant speed of the motor in percentOutput
+   * @return MotorOutputPercent
+   */
 
   public double get( )
   {
@@ -181,27 +209,48 @@ public class ExampleSmartMotorController
   /** Inverts motor direction */
   public void setInverted(boolean isInverted)
   {
+    DataLogManager.log("Motor inverted: " + ControlMode.PercentOutput);
     m_motor.setInverted(isInverted);
   }
+
+  /**
+   * Return to get whether motor is inverted or not
+   * @return True if motor is inverted, false if it is not
+   */
 
   public boolean getInverted( )
   {
     return m_motor.getInverted( );
   }
 
+  /**
+   * Returns difference between desired target value and motor's actual value
+   * @return ClosedLoopError
+   */
+
   public double getClosedLoopError( )
   {
     return (m_motor.getClosedLoopError( ));
   }
 
+  /**
+   * Disables motor
+   */
+
   public void disable( )
   {
+    DataLogManager.log("Motor disabled");
     m_motor.set(ControlMode.Disabled, 0);
   }
 
+  /**
+   * Returns velocity as measured by encoder in rotations
+   * @return Velocity in rotations
+   */
+
   public double getVelocity( )
   {
-    return m_motor.getSelectedSensorVelocity( );
+    return countsToRotations(m_motor.getSelectedSensorVelocity( ));
   }
 
   public TalonSRXSimCollection getMotorSimulation( )
@@ -209,8 +258,13 @@ public class ExampleSmartMotorController
     return m_motorSim;
   }
 
+  /**
+   * Stops motor by setting percentOutput to 0
+   */
+
   public void stopMotor( )
   {
+    DataLogManager.log("Motor stopped");
     set(0.0);
   }
 }
