@@ -28,7 +28,7 @@ public class Robot extends TimedRobot
   private final static double               kMaxAcceleration  = 1.0;   // Trapezoidal profile max acceleration
   private final static double               kForwardGoal      = 3.0;   // Trapezoidal move - forward goal rotations
   private final static double               kReverseGoal      = 0.0;   // Trapezoidal move - reverse goal rotations
-  private final static double               kMaxPositionError = 0.06;  // Maximum allowed error between actual position and goal
+  private final static double               kMaxPositionError = 0.005;  // Maximum allowed error between actual position and goal
 
   // Class member objects
   private final XboxController              m_controller      = new XboxController(kGamepadPort);
@@ -70,7 +70,7 @@ public class Robot extends TimedRobot
       m_motor.stopMotor( );
     }
 
-    if (m_controller.getRawButtonPressed(8))
+    if (m_controller.getStartButtonPressed( ))
     {
       DataLogManager.log("Menu Button Pressed - Invert motor (PID disabled)");
       m_pidEnabled = false;
@@ -107,7 +107,7 @@ public class Robot extends TimedRobot
       m_goal = new TrapezoidProfile.State(kReverseGoal, 0);
     }
 
-    if (m_pidEnabled && (m_goal.position - m_setpoint.position > kMaxPositionError))
+    if (m_pidEnabled && (Math.abs(m_goal.position - m_setpoint.position) > kMaxPositionError))
     {
       m_setpoint = m_profile.calculate(kDt, m_setpoint, m_goal);
       m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, m_setpoint.position, 0.0);
