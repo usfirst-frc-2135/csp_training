@@ -15,9 +15,7 @@ import frc.robot.ExampleSmartMotorController.PIDMode;
 
 public class Robot extends TimedRobot
 {
-  // Constants
-  // TODO: Note that we try to make all numbers use names (these are called literals) to make them describe the value
-  //    Use these literals to replace the "magic" numbers in your code--it should improve readability
+  // Constants (Magic Numbers)
   private final static double                kDt              = 0.020; // Loop delay time for simulation
   private final static int                   kGamepadPort     = 0;     // XBox m_controller USB port
   private final static int                   kMotorCANId      = 5;     // Motor CAN ID assignment
@@ -34,7 +32,7 @@ public class Robot extends TimedRobot
 
   // Member objects
   private final XboxController               m_controller     = new XboxController(kGamepadPort);
-  private final ExampleSmartMotorController  m_motor          = new ExampleSmartMotorController(kMotorCANId, kEncoderCPR); // TODO: This was missing the second parameter!
+  private final ExampleSmartMotorController  m_motor          = new ExampleSmartMotorController(kMotorCANId, kEncoderCPR);
   private final TalonSRXSimCollection        m_motorSim       = m_motor.getMotorSimulation( );
   private final ElevSim                      m_elevSim        = new ElevSim(m_motorSim, kEncoderCPR);
 
@@ -45,23 +43,15 @@ public class Robot extends TimedRobot
   private TrapezoidProfile.State             m_goal           = new TrapezoidProfile.State(kReverseGoal, 0.0);
   private boolean                            m_pidEnabled     = false;
 
-  // TODO: Not quite sure how inserting this elevator sim class even works here, but you've already created the m_elevSim object on the previous line,
-  //        so we can just use it's methods without having all this extraneous sfuff in here.
-  // public class ElevSim
-  // {
-  // ....
 
   public void robotInit( )
   {
-    DataLogManager.start( );  // TODO: Put this first when robot starts so all the following methods can use the logger.
-
-    // m_profile = new TrapezoidProfile(constraints); // TODO: Delete this, it's already done during initialization of class member variables above
-
+    DataLogManager.start( ); 
     m_motor.setPID(kP, kI, kD);
     m_motor.resetEncoder( );
     m_elevSim.reset( );
 
-    SmartDashboard.putNumber("Kp", m_motor.getKp( ));   // TODO: This can never be changed once the robot is running--I moved it into robotInit() (could be deleted!)
+    SmartDashboard.putNumber("Kp", m_motor.getKp( ));  
   }
 
   @Override
@@ -77,7 +67,7 @@ public class Robot extends TimedRobot
     m_elevSim.periodic( );
   }
 
-  @Override // TODO: Somehow this was removed and teleopPeriodic would never run!
+  @Override
   public void teleopPeriodic( )
   {
     SmartDashboard.putNumber("Goal", m_goal.position);
@@ -86,7 +76,7 @@ public class Robot extends TimedRobot
 
     if (m_controller.getAButtonPressed( ))
     {
-      DataLogManager.log("A button pressed"); // TODO: Put all the button log messages BEFORE the action, so they are chronological in the printed log
+      DataLogManager.log("A button pressed");
       m_pidEnabled = false;
       m_motor.setOutput(kConstantOutput);
     }
@@ -98,7 +88,7 @@ public class Robot extends TimedRobot
       m_motor.setOutput(-kConstantOutput);
     }
 
-    if (m_controller.getStartButtonPressed( ))  // TODO: Button 8 is the START button. 
+    if (m_controller.getRawButtonPressed(8))
     {
       DataLogManager.log("Start button pressed");
       m_pidEnabled = false;
@@ -133,7 +123,7 @@ public class Robot extends TimedRobot
     if (m_pidEnabled)
     {
       m_setpoint = m_profile.calculate(kDt, m_setpoint, m_goal);  // Get a new setpoint by passing in the current setpoint and goal
-      m_motor.setSetpoint(PIDMode.kPosition, m_setpoint.position, 0.0); // Adjust feedforward TODO: Arbitrary feedforward is ZERO for this
+      m_motor.setSetpoint(PIDMode.kPosition, m_setpoint.position, 0.0);
 
       if ((Math.abs(m_goal.position - m_setpoint.position)) < kGoalTolerance)
       {
@@ -142,81 +132,4 @@ public class Robot extends TimedRobot
     }
 
   }
-
-  // TODO: Providing "getter" functions at this level adds no useful value. No one is calling these--nor should they. 
-  //        All data should be passed through the method calls--not using these. I recommend removing them.
-  //   public static double getKdt( )
-  //   {
-  //     return kDt;
-  //   }
-
-  //   public static double getKv( )
-  //   {
-  //     return kv;
-  //   }
-
-  //   public static double getKa( )
-  //   {
-  //     return ka;
-  //   }
-
-  //   public double getGoal( )
-  //   {
-  //     return goal;
-  //   }
-
-  //   public void setGoal(double goal)
-  //   {
-  //     this.goal = goal;
-  //   }
-
-  //   public static double getKencodercpr( )
-  //   {
-  //     return kEncoderCPR;
-  //   }
-
-  //   public XboxController getController( )
-  //   {
-  //     return m_controller;
-  //   }
-
-  //   public static ExampleSmartMotorController getmMotor( )
-  //   {
-  //     return m_motor;
-  //   }
-
-  //   public SimpleMotorFeedforward getM_feedforward( )
-  //   {
-  //     return m_feedforward;
-  //   }
-
-  //   public TrapezoidProfile getM_profile( )
-  //   {
-  //     return m_profile;
-  //   }
-
-  //   public TrapezoidProfile.Constraints getM_Constraints( )
-  //   {
-  //     return m_Constraints;
-  //   }
-
-  //   public TrapezoidProfile.State getM_setpoint( )
-  //   {
-  //     return m_setpoint;
-  //   }
-
-  //   public void setM_setpoint(TrapezoidProfile.State m_setpoint)
-  //   {
-  //     this.m_setpoint = m_setpoint;
-  //   }
-
-  //   public TalonSRXSimCollection getM_motorSim( )
-  //   {
-  //     return m_motorSim;
-  //   }
-
-  //   public ElevSim getM_elevSim( )
-  //   {
-  //     return m_elevSim;
-  //   }
 }
