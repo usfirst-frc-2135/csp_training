@@ -16,8 +16,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class Robot extends TimedRobot
 {
   // Constants
-  // TODO: Note that we try to make all numbers use names (these are called literals) to make them describe the value
-  //    Use these literals to replace the "magic" numbers in your code--it should improve readability
+  
   private final static double               kDt              = 0.020; // Loop delay time for simulation
   private final static int                  kGamepadPort     = 0;     // XBox m_controller USB port
   private final static int                  kMotorCANId      = 5;     // Motor CAN ID assignment
@@ -39,6 +38,7 @@ public class Robot extends TimedRobot
   private final ElevSim                     m_elevSim        = new ElevSim(m_motorSim, kEncoderCPR);
 
   private TrapezoidProfile                  m_trapezoidalProfile;
+  private boolean                           m_pidEnabled     = false;
 
   // private final static double kv = 1.0;
   // private final static double ka = 2.0;
@@ -49,24 +49,14 @@ public class Robot extends TimedRobot
     TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(kv, ka);
   }
 
-  // private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(1, 1.0); // TODO: We won't use this - delete it
+
 
   // Create a motion profile with the given maximum velocity and maximum acceleration constraints for the next setpoint.
   private final TrapezoidProfile m_profile  = new TrapezoidProfile(new TrapezoidProfile.Constraints(1.75, 0.75));
   private TrapezoidProfile.State m_goal     = new TrapezoidProfile.State( );
   private TrapezoidProfile.State m_setpoint = new TrapezoidProfile.State( );
 
-  // TODO: This is not how to bring in another class - I've brought the elevator sim class in using the "import" above, and I added the ElevSim class file
-  //
-  // public final static TalonSRXSimCollection m_TopMotorSim =
-  // m_motor.getMotorSimulation();m_motorSim=m_motor.getSimCollection();
-  // public final static elevSim m_elevSim = new elevSim(m_motorSim, kEncoderCPR);
-  // public class elevSim
-  // {
-  //   public void periodic( )
-  //   {
-  //   }
-  // }
+ 
 
   @Override
   public void robotInit( )
@@ -92,28 +82,32 @@ public class Robot extends TimedRobot
 
     if (m_controller.getAButtonPressed( ))
     {
-      DataLogManager.log("A button pressed"); // TODO: Put all the button log messages BEFORE the action, so they are chronological in the printed log
+      DataLogManager.log("A button pressed"); 
       m_motor.set(kConstantOutput);
-      // DataLogManager.log("set a 0.3(percent output) constant speed"); TODO: Remove this, the .set() prints a log message
+      m_pidEnabled = false;
+      
     }
 
     if (m_controller.getBButtonPressed( ))
     {
-      DataLogManager.log("B button pressed"); // TODO: Put all the button log messages BEFORE the action, so they are chronological in the printed log
+      DataLogManager.log("B button pressed"); 
       m_motor.set(-kConstantOutput);
-      // DataLogManager.log("set a -0.3(percent output) constant speed"); TODO: Remove this, the .set() prints a log message
+      m_pidEnabled = false;
+      
     }
 
     if (m_controller.getRightBumperPressed( ))
     {
       DataLogManager.log("Right bumper pressed");
       m_motor.stopMotor( );
+      m_pidEnabled = false;
     }
 
     if (m_controller.getStartButtonPressed( ))
     {
-      DataLogManager.log("Start button pressed"); // TODO: Put all the button log messages BEFORE the action, so they are chronological in the printed log
+      DataLogManager.log("Start button pressed"); 
       m_motor.setInverted(!m_motor.getInverted( ));
+      m_pidEnabled = false;
       //
       // TODO: The above line does all of this - have a look at how it does this and then delete
       // if (m_motor.getInverted( ))
@@ -128,30 +122,38 @@ public class Robot extends TimedRobot
 
     if (m_controller.getXButtonPressed( ))
     {
-      DataLogManager.log("X button pressed"); // TODO: Put all the button log messages BEFORE the action, so they are chronological in the printed log
+      DataLogManager.log("X button pressed"); 
       m_goal = new TrapezoidProfile.State(kForwardGoal, 0.0);
       m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 1.0, 0.0);
+      m_pidEnabled = true;
     }
     if (m_controller.getYButtonPressed( ))
     {
-      DataLogManager.log("Y button pressed"); // TODO: Put all the button log messages BEFORE the action, so they are chronological in the printed log
+      DataLogManager.log("Y button pressed"); 
       m_goal = new TrapezoidProfile.State(kReverseGoal, 0.0);
       m_motor.setSetpoint(ExampleSmartMotorController.PIDMode.kPosition, 0.0, 0.0);
+      m_pidEnabled = true;
     }
-  }
+  
 
   // TODO: here is pseudo code for the PID control loop with a trapezoidal profile
   //
-  //  if (pid is enabled)
-  //      new setpoint = profile.calculate(kDt, old setpoint, m_goal)
-  //      call m_motor.setSetpoint(new setpoint)
-  //      if (new setpoint position - goal position < kGoalToelrance)
-  //          disable pid
-  //
+    if (m_pidEnabled)
+    {
+        m_setpoint = profile.calculate(kDt, m_setpoint, m_goal);
+        m_motor.setSetpoint(PIDMode.kPosition, m_setpoint.position, 0.0);
+        if ((Math.abs(m_goal.position - m_setpoint.position)) < kGoalTolerance)
+        {
+            m_pidEnabled = false;
+        }
+    }
+  
   //  for all of the buttons above, either enable the pid (X and Y) or disable the pid (A, B, Right Bumper, Start)
   //    a simple boolean can be used to enable or disable the PID processing
+  }
 
 }
+
 
 // TODO: This can be deleted once the pid pseudo code has been implemented
 //
