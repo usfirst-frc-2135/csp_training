@@ -13,9 +13,6 @@ import edu.wpi.first.wpilibj.DataLogManager;
 
 /**
  * A simplified stub class that simulates the API of a common "smart" motor controller.
- *
- * <p>
- * Has no actual functionality.
  */
 
 public class ExampleSmartMotorController
@@ -35,12 +32,12 @@ public class ExampleSmartMotorController
 
   private TalonSRXSimCollection m_motorSim;
 
-  public ExampleSmartMotorController(int ports, double kEncoderCPR)
+  public ExampleSmartMotorController(int ports, double EncoderCPR)
   {
     m_motor = new WPI_TalonSRX(ports);
     m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
 
-    m_EncoderCPR = kEncoderCPR;
+    m_EncoderCPR = EncoderCPR;
 
     //Encoder type in TalonSRX is quadrature encoder
     m_motor.selectProfileSlot(kSlotIndex, kPIDIndex);
@@ -144,7 +141,6 @@ public class ExampleSmartMotorController
     }
 
     m_motor.set(controlMode, rotationsToCounts(setpoint));
-    DataLogManager.log("ControlMode: " + controlMode + " Setpoint: " + setpoint);
   }
 
   /**
