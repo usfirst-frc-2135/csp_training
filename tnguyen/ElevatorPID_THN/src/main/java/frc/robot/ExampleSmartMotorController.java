@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj.DataLogManager;
  * A simplified stub class that simulates the API of a common "smart" motor controller.
  *
  * <p>
- * Has no actual functionality. // TODO: Fix this comment. It's no longer valid.
+ * Wrapper of motor controller
  */
 public class ExampleSmartMotorController
 {
@@ -39,7 +39,7 @@ public class ExampleSmartMotorController
   private double                m_ki;
   private double                m_kd;
 
-  private double                m_EncoderCPR;
+  private double                m_encoderCPR;
 
   /**
    * Creates a new ExampleSmartMotorController.
@@ -47,19 +47,16 @@ public class ExampleSmartMotorController
    * @param port
    *          The port for the controller.
    */
-  @SuppressWarnings("PMD.UnusedFormalParameter")
-  public ExampleSmartMotorController(int ports, double kEncoderCPR) // TODO: The parameter kEncoderCPR is not a constant--it is a variable parameter. Remove the "k"
+  public ExampleSmartMotorController(int ports, double encoderCPR)
   {
     m_motor = new WPI_TalonSRX(ports);
     m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
-    //encoder type in TalonSRX is quadrature encoder // TODO: This comment is now redundant--the code says the same thing
     m_motor.selectProfileSlot(kSlotIndex, kPIDIndex);
 
     setPID(m_kp, m_ki, m_kd);
 
     m_motorSim = m_motor.getSimCollection( );
-    m_EncoderCPR = kEncoderCPR;
-    DataLogManager.start( );
+    m_encoderCPR = encoderCPR;
   }
 
   /**
@@ -67,19 +64,24 @@ public class ExampleSmartMotorController
    * encoder reads values in counts, but human users input rotations for simplicity
    * 4096 counts in one rotation, following methods converts counts to rotations, vice versa
    */
-
   private double rotationsToCounts(double rotations)
   {
-    return rotations * m_EncoderCPR;
+    return rotations * m_encoderCPR;
   }
 
+  /**
+   * ROTATIONS TO COUNTS
+   * encoder reads values in counts, but human users input rotations for simplicity
+   * 4096 counts in one rotation, following methods converts counts to rotations, vice versa
+   */
   private double countsToRotations(double encoderCounts)
   {
-    return encoderCounts / m_EncoderCPR;
+    return encoderCounts / m_encoderCPR;
   }
 
   /**
    * Example method for setting the PID gains of the smart controller.
+   * configure kp, ki, and kd based on values passed in Robot.java
    *
    * @param kp
    *          The proportional gain.
@@ -93,16 +95,15 @@ public class ExampleSmartMotorController
     m_kp = kp;
     m_ki = ki;
     m_kd = kd;
+    DataLogManager.log("PID Changed:  kP " + kp + " kI " + ki + " kd " + kd);
     m_motor.config_kP(kSlotIndex, kp);
     m_motor.config_kI(kSlotIndex, ki);
     m_motor.config_kD(kSlotIndex, kd);
-    // TODO: It would be nice to log when the PID is changed, yes? yessssssss
-    // TODO: This is better, but why not put the actual settings in here? Like this:
-    // DataLogManager.log("PID Changed:  kP " + kp + " kI " + ki + " kd " + kd);
-    // TODO: And while it's OK to put smilies in your personal projects, they get quite old if everyone puts them in the competition robot software
-    DataLogManager.log("PID Changed ;)");
   }
 
+  /**
+   * Return Kp value to Robot.java
+   */
   public double getKp( )
   {
     return m_kp;
@@ -110,7 +111,9 @@ public class ExampleSmartMotorController
 
   /**
    * Example method for setting the setpoint of the smart controller in PID mode.
-   *
+   * Define the control mode based on the desired type of PID: positional, veolcity, or motion magic
+   * Desired setpoint, in rotations, is converted to counts
+   * 
    * @param mode
    *          The mode of the PID controller.
    * @param setpoint
@@ -139,12 +142,13 @@ public class ExampleSmartMotorController
         break;
     }
 
-    DataLogManager.log("ControlMode: " + controlMode + " Setpoint: " + setpoint);
+    // DataLogManager.log("ControlMode: " + controlMode + " Setpoint: " + setpoint);
     m_motor.set(controlMode, rotationsToCounts(setpoint));
   }
 
   /**
    * Places this motor controller in follower mode.
+   * Method is not used in Robot.java
    *
    * @param leader
    *          The leader to follow.
@@ -180,14 +184,13 @@ public class ExampleSmartMotorController
   }
 
   /**
-   * used to set the constant speed of the motor, in percentOutput // TODO: This is not a voltage!
+   * used to set the constant speed of the motor, in percentOutput
    * Change the variable name and comment.
    */
-  public void set(double voltage)
-  { // set the speed of the motor using percent output // TODO: This comment is now redundant--delete it.
-   // TODO: Why not put the percent output right into the log message? See the example and comment above.
-    DataLogManager.log("Encoder Voltage Changed");
-    m_motor.set(ControlMode.PercentOutput, voltage);
+  public void set(double percentOutput)
+  {
+    DataLogManager.log("Encoder Percent Output Changed");
+    m_motor.set(ControlMode.PercentOutput, percentOutput);
   }
 
   public double get( )
@@ -198,8 +201,8 @@ public class ExampleSmartMotorController
   /** Inverts motor direction */
   public void setInverted(boolean isInverted)
   {
+    DataLogManager.log("Motor Inverted: " + ControlMode.PercentOutput);
     m_motor.setInverted(isInverted);
-    DataLogManager.log("Motor Inverted Successfully"); // TODO: Put the new value right into the log message.
   }
 
   public boolean getInverted( )
