@@ -161,6 +161,10 @@ public class ExampleSmartMotorController
     return countsToRotations(m_motor.getSelectedSensorPosition( ));
   }
 
+  public double getClosedLoopError(){
+    return countsToRotations(m_motor.getClosedLoopError());
+  }
+
   /**
    * Returns the encoder rate.
    *
