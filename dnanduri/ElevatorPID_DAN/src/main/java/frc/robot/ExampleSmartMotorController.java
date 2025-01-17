@@ -15,31 +15,18 @@ import edu.wpi.first.wpilibj.DataLogManager;
 public class ExampleSmartMotorController
 {
   // Constants
-  // TODO: Note that we try to make all numbers use names (these are called literals) to make them describe the value
-  //    Use these literals to replace the "magic" numbers in your code--it should improve readability
   private final static int kSlotIndex              = 0;  // Talon SRX internal slot index for holding PID constnats
   private final static int kPIDIndex               = 0;  // Talon SRX internal PID index within a slot
   private final static int kCANTimeout             = 0;  // CTRE timeout that makes the call block and wait for a response
   private final static int kCTREVelocityConversion = 10; // CTRE reports velocities in counts/100 msec (not seconds)
 
-  // TODO: Maybe it's time to remove these several lines of generic comment about how java works?
-  // enum is short for enumeration, which means the action of mentioning a number
-  // of things one by one
-  // Often represents specific categories or states, which is why the variables
-  // kPosition, kVelocity, and kMovementWitchcraft were placed here
-  // They prevent errors from arbitrary strings or integers
-  // enhances code readability, which makes it easier to read
-  // Can be used in switch statements
+
   public enum PIDMode
   {
     kPosition, kVelocity, kMovementWitchcraft,
   }
 
-  // TODO: This second (original) constructor is no longer used with the elevator sim, it's causing a crash so I commented it out (stacktrace showed it)
-  // public ExampleSmartMotorController(int port)
-  // {
-  //   // constructor implementation
-  // }
+
 
   private int                   m_port;         // CAN ID (port) for the motor controller
   private double                m_encoderCPR;   // Encoder counts per revolution for the attached encoder
@@ -58,25 +45,19 @@ public class ExampleSmartMotorController
    * @param encoderCPR
    *          The counts per rotation for the attached encoder.
    */
-  @SuppressWarnings("PMD.UnusedFormalParameter")  // TODO: This suppression annotation is no longer needed, both parameters are now used
   // The constructor initialises the motor with the given PID settings
   // It ensures the motor is ready to operate with these configurations
   public ExampleSmartMotorController(int port, double encoderCPR)
   {
-    // m_motor = new WPI_TalonSRX(5);  // TODO: This line is not needed, since the port is passed in and only one Talon SRX needs to be created (it's created below)
-    //                                  //  TODO: this created a bug where simulation would not work, because the motor sim was on THIS talon SRX and not the one created with the passed in port number
-    //
-    // This is the constructor; it specifies the CAN bus port that the motor controller is connected to
+
     m_port = port;
     m_encoderCPR = encoderCPR;
 
-    m_motor = new WPI_TalonSRX(m_port); // TODO: I had to move this line before the sim collection reference, because you were getting a simulation of the Talon SRX that wasn't being created yet
-    m_motorSim = m_motor.getSimCollection( ); // TODO: Get the sim object AFTER the motor object is created
+    m_motor = new WPI_TalonSRX(m_port);
     m_motor.configFactoryDefault( );
     m_motor.selectProfileSlot(0, 0);
+    m_motorSim = m_motor.getSimCollection( );
     m_motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
-    // setPID(m_kp, m_ki, m_kd); // TODO: This does not need to be initialized--make the caller set the PID values!
-    // DataLogManager.start( ); // TODO: Only do this ONCE for the entire robot in robotInit - delete this one
   }
 
   public TalonSRXSimCollection getMotorSimulation( )
@@ -131,7 +112,6 @@ public class ExampleSmartMotorController
    * @param arbFeedforward
    *          An arbitrary feedforward output (from -1 to 1 for percentOutput).
    */
-  //void means you don't return anything  TODO: maybe it's time to remove this generic comment about how java works?
   public void setSetpoint(PIDMode mode, double setpoint, double arbFeedforward)
   {
     ControlMode controlMode;
